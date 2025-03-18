@@ -1,64 +1,69 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { useState, useEffect } from "react"
-import { usePathname } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Menu, X, User, AlertCircle, Moon, Sun, Code, Sparkles } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { useAuth } from "@/lib/auth-context"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { useTheme } from "next-themes"
+import Link from "next/link";
+import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Menu, X, User, AlertCircle, Moon, Sun, Code, Sparkles } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth-context";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useTheme } from "next-themes";
 
 export function Navbar() {
-  const [isOpen, setIsOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
-  const [isLoaded, setIsLoaded] = useState(false)
-  const pathname = usePathname()
-  const { user, signOut, demoMode } = useAuth()
-  const { theme, setTheme } = useTheme()
+  const [isOpen, setIsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const pathname = usePathname();
+  const { user, signOut, demoMode } = useAuth();
+  const { theme, setTheme } = useTheme();
 
   // Set isLoaded to true after component mounts for animations
   useEffect(() => {
-    setIsLoaded(true)
-  }, [])
+    setIsLoaded(true);
+  }, []);
 
   // Close mobile menu when route changes
   useEffect(() => {
-    setIsOpen(false)
-  }, [pathname])
+    setIsOpen(false);
+  }, [pathname]);
 
   // Handle scroll effect
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 10) {
-        setScrolled(true)
+        setScrolled(true);
       } else {
-        setScrolled(false)
+        setScrolled(false);
       }
-    }
+    };
 
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const routes = [
     { href: "/", label: "홈" },
     { href: "/portfolio", label: "포트폴리오" },
     { href: "/blog", label: "블로그" },
     { href: "/about", label: "소개" },
-  ]
+  ];
 
   return (
     <header
       className={cn(
         "sticky top-0 z-50 w-full transition-all duration-500",
-        scrolled ? "bg-[#0a0a12]/95 backdrop-blur-md border-b border-indigo-900/30 shadow-lg" : "bg-transparent",
+        scrolled ? "bg-[#0a0a12]/95 backdrop-blur-md border-b border-indigo-900/30 shadow-lg" : "bg-transparent"
       )}
     >
       {demoMode && (
-        <Alert variant="warning" className="rounded-none border-x-0 border-t-0">
+        <Alert variant="default" className="rounded-none border-x-0 border-t-0">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             데모 모드: <strong>demo@example.com</strong> / <strong>password</strong>로 로그인하거나 Google 로그인을
@@ -71,7 +76,9 @@ export function Navbar() {
         <div className="flex-1 flex justify-start">
           <Link href="/" className="flex items-center gap-2 group">
             <div
-              className={`relative w-8 h-8 flex items-center justify-center transition-all duration-700 ${isLoaded ? "opacity-100 rotate-0" : "opacity-0 -rotate-90"}`}
+              className={`relative w-8 h-8 flex items-center justify-center transition-all duration-700 ${
+                isLoaded ? "opacity-100 rotate-0" : "opacity-0 -rotate-90"
+              }`}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-md transform group-hover:rotate-6 transition-transform duration-300"></div>
               <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-md opacity-50 blur-md animate-pulse-glow"></div>
@@ -79,7 +86,9 @@ export function Navbar() {
               <Sparkles className="absolute -top-1 -right-1 h-3 w-3 text-yellow-300 animate-pulse" />
             </div>
             <span
-              className={`font-bold text-xl text-white tracking-tight group-hover:text-indigo-300 transition-all duration-500 ${isLoaded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4"}`}
+              className={`font-bold text-xl text-white tracking-tight group-hover:text-indigo-300 transition-all duration-500 ${
+                isLoaded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4"
+              }`}
             >
               plob
             </span>
@@ -95,7 +104,7 @@ export function Navbar() {
               className={cn(
                 "text-sm font-medium transition-all duration-500 hover:text-white relative py-1 px-2 overflow-hidden group",
                 pathname === route.href ? "text-white" : "text-gray-300",
-                isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4",
+                isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
               )}
               style={{ transitionDelay: `${index * 100}ms` }}
             >
@@ -115,7 +124,9 @@ export function Navbar() {
             variant="ghost"
             size="icon"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className={`rounded-full text-gray-300 hover:text-white hover:bg-indigo-900/20 transition-all duration-500 ${isLoaded ? "opacity-100 scale-100" : "opacity-0 scale-50"}`}
+            className={`rounded-full text-gray-300 hover:text-white hover:bg-indigo-900/20 transition-all duration-500 ${
+              isLoaded ? "opacity-100 scale-100" : "opacity-0 scale-50"
+            }`}
             style={{ transitionDelay: "400ms" }}
             aria-label={theme === "dark" ? "라이트 모드로 전환" : "다크 모드로 전환"}
           >
@@ -128,7 +139,9 @@ export function Navbar() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={`rounded-full overflow-hidden border border-indigo-900/50 hover:border-indigo-500 transition-all duration-500 ${isLoaded ? "opacity-100 scale-100" : "opacity-0 scale-50"}`}
+                  className={`rounded-full overflow-hidden border border-indigo-900/50 hover:border-indigo-500 transition-all duration-500 ${
+                    isLoaded ? "opacity-100 scale-100" : "opacity-0 scale-50"
+                  }`}
                   style={{ transitionDelay: "500ms" }}
                 >
                   {user.photoURL ? (
@@ -165,7 +178,9 @@ export function Navbar() {
               <Link href="/login">
                 <Button
                   variant="ghost"
-                  className={`text-gray-300 hover:text-white hover:bg-indigo-900/20 transition-all duration-500 ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+                  className={`text-gray-300 hover:text-white hover:bg-indigo-900/20 transition-all duration-500 ${
+                    isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+                  }`}
                   style={{ transitionDelay: "400ms" }}
                 >
                   로그인
@@ -173,7 +188,9 @@ export function Navbar() {
               </Link>
               <Link href="/register">
                 <Button
-                  className={`bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white border-0 shadow-md hover:shadow-lg transition-all duration-500 hover:translate-y-[-3px] ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+                  className={`bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white border-0 shadow-md hover:shadow-lg transition-all duration-500 hover:translate-y-[-3px] ${
+                    isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+                  }`}
                   style={{ transitionDelay: "500ms" }}
                 >
                   회원가입
@@ -185,7 +202,9 @@ export function Navbar() {
 
         {/* Mobile Menu Button */}
         <button
-          className={`md:hidden text-gray-300 hover:text-white transition-all duration-500 ${isLoaded ? "opacity-100 rotate-0" : "opacity-0 rotate-90"}`}
+          className={`md:hidden text-gray-300 hover:text-white transition-all duration-500 ${
+            isLoaded ? "opacity-100 rotate-0" : "opacity-0 rotate-90"
+          }`}
           onClick={() => setIsOpen(!isOpen)}
           aria-label="Toggle menu"
         >
@@ -203,9 +222,7 @@ export function Navbar() {
                 href={route.href}
                 className={cn(
                   "text-sm font-medium transition-all duration-300 hover:text-white py-2 px-3 rounded-md animate-slide-right",
-                  pathname === route.href
-                    ? "text-white bg-indigo-900/20 border-l-2 border-indigo-500"
-                    : "text-gray-300",
+                  pathname === route.href ? "text-white bg-indigo-900/20 border-l-2 border-indigo-500" : "text-gray-300"
                 )}
                 style={{ animationDelay: `${index * 50}ms` }}
               >
@@ -298,6 +315,5 @@ export function Navbar() {
         </div>
       )}
     </header>
-  )
+  );
 }
-
