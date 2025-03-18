@@ -1,37 +1,37 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useAuth } from "@/lib/auth-context"
-import { useToast } from "@/hooks/use-toast"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/lib/auth-context";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ProfilePage() {
-  const { user, loading } = useAuth()
-  const router = useRouter()
-  const { toast } = useToast()
-  const [displayName, setDisplayName] = useState("")
-  const [isSaving, setIsSaving] = useState(false)
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  const { toast } = useToast();
+  const [displayName, setDisplayName] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push("/login")
+      router.push("/login");
     }
 
     if (user?.displayName) {
-      setDisplayName(user.displayName)
+      setDisplayName(user.displayName);
     }
-  }, [user, loading, router])
+  }, [user, loading, router]);
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSaving(true)
+    e.preventDefault();
+    setIsSaving(true);
 
     try {
       // In a real app, you would update the user profile in your database
@@ -39,24 +39,32 @@ export default function ProfilePage() {
       toast({
         title: "프로필 업데이트됨",
         description: "프로필이 성공적으로 업데이트되었습니다.",
-      })
-    } catch (error: any) {
-      toast({
-        title: "프로필 업데이트 오류",
-        description: error.message,
-        variant: "destructive",
-      })
+      });
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast({
+          title: "프로필 업데이트 오류",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "프로필 업데이트 오류",
+          description: "An unknown error occurred.",
+          variant: "destructive",
+        });
+      }
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
 
   if (loading) {
     return (
       <div className="container flex items-center justify-center min-h-[calc(100vh-4rem)]">
         <p>로딩 중...</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -107,6 +115,5 @@ export default function ProfilePage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
-

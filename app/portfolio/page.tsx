@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import { CardFooter } from "@/components/ui/card"
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { CardFooter } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -12,8 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { ExternalLink, Github, Sparkles } from "lucide-react"
+} from "@/components/ui/dialog";
+import { ExternalLink, Github, Sparkles } from "lucide-react";
 
 // Mock portfolio data - in a real app, this would come from a database
 const portfolioItems = [
@@ -109,28 +109,29 @@ const portfolioItems = [
     githubLink: "https://github.com/username/project",
     screenshots: ["/placeholder.svg?height=600&width=800", "/placeholder.svg?height=600&width=800"],
   },
-]
+];
 
 export default function PortfolioPage() {
-  const [selectedProject, setSelectedProject] = useState(null)
-  const [isLoaded, setIsLoaded] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false);
 
   // Set isLoaded to true after component mounts for animations
   useEffect(() => {
-    setIsLoaded(true)
-  }, [])
+    setIsLoaded(true);
+  }, []);
 
   // Get featured items
-  const featuredItems = portfolioItems.filter((item) => item.featured)
+  const featuredItems = portfolioItems.filter((item) => item.featured);
   // Get all items except featured ones
-  const regularItems = portfolioItems.filter((item) => !item.featured)
+  const regularItems = portfolioItems.filter((item) => !item.featured);
 
   return (
     <div className="container py-12">
       <div className="space-y-10">
         {/* Header with Animation */}
         <div
-          className={`space-y-4 text-right pr-8 transition-all duration-700 ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
+          className={`space-y-4 text-right pr-8 transition-all duration-700 ${
+            isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+          }`}
         >
           <div className="relative inline-block">
             <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">포트폴리오</h1>
@@ -146,7 +147,9 @@ export default function PortfolioPage() {
         {/* Featured Projects with Animation */}
         {featuredItems.length > 0 && (
           <div
-            className={`space-y-6 transition-all duration-700 delay-100 ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
+            className={`space-y-6 transition-all duration-700 delay-100 ${
+              isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+            }`}
           >
             <h2 className="text-2xl font-bold relative inline-block">
               주요 프로젝트
@@ -314,7 +317,9 @@ export default function PortfolioPage() {
 
         {/* All Projects with Animation */}
         <div
-          className={`space-y-6 transition-all duration-700 delay-200 ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
+          className={`space-y-6 transition-all duration-700 delay-200 ${
+            isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+          }`}
         >
           <h2 className="text-2xl font-bold relative inline-block">
             모든 프로젝트
@@ -478,6 +483,5 @@ export default function PortfolioPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
-
