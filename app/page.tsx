@@ -1,6 +1,6 @@
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { ArrowRight, Briefcase, FileText, User } from "lucide-react"
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, Briefcase, FileText, User } from "lucide-react";
 
 export default function Home() {
   return (
@@ -63,7 +63,10 @@ export default function Home() {
             </div>
             <div className="space-x-4 animate-scale-in">
               <Link href="/portfolio">
-                <Button variant="glow" className="gap-1 transition-all duration-500 hover:translate-y-[-3px]">
+                <Button
+                  variant="default"
+                  className="glow-button gap-1 transition-all duration-500 hover:translate-y-[-3px]"
+                >
                   포트폴리오 보기 <ArrowRight className="h-4 w-4 ml-1 animate-bounce-right" />
                 </Button>
               </Link>
@@ -156,6 +159,5 @@ export default function Home() {
         </div>
       </section>
     </div>
-  )
+  );
 }
-
