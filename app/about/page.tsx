@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Sparkles } from "lucide-react"
 
 export default function AboutPage() {
   const [isLoaded, setIsLoaded] = useState(false)
@@ -23,9 +22,6 @@ export default function AboutPage() {
         >
           <div className="relative inline-block">
             <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">소개</h1>
-            <span className="absolute -top-2 -right-6">
-              <Sparkles className="h-5 w-5 text-indigo-400 animate-pulse-glow" />
-            </span>
           </div>
           <p className="text-muted-foreground md:text-xl max-w-2xl mx-auto">
             저의 이야기, 기술, 경험을 공유합니다. 함께 성장하고 배우는 여정에 동참해주세요.
@@ -177,11 +173,8 @@ export default function AboutPage() {
                           </div>
                           <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
                             <div
-                              className="bg-gradient-to-r from-indigo-500 to-purple-600 h-2 rounded-full transition-all duration-1000 animate-shimmer"
-                              style={{
-                                width: isLoaded && activeTab === "skills" ? `${skill.value}%` : "0%",
-                                backgroundSize: "200% 100%",
-                              }}
+                              className="bg-gradient-to-r from-indigo-500 to-purple-600 h-2 rounded-full"
+                              style={{ width: `${skill.value}%` }}
                             ></div>
                           </div>
                         </div>
@@ -218,11 +211,8 @@ export default function AboutPage() {
                           </div>
                           <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
                             <div
-                              className="bg-gradient-to-r from-indigo-500 to-purple-600 h-2 rounded-full transition-all duration-1000 animate-shimmer"
-                              style={{
-                                width: isLoaded && activeTab === "skills" ? `${skill.value}%` : "0%",
-                                backgroundSize: "200% 100%",
-                              }}
+                              className="bg-gradient-to-r from-indigo-500 to-purple-600 h-2 rounded-full"
+                              style={{ width: `${skill.value}%` }}
                             ></div>
                           </div>
                         </div>

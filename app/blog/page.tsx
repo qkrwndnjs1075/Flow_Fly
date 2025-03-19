@@ -127,9 +127,10 @@ export default function BlogPage() {
               {featuredPosts.map((post, index) => (
                 <Link href={`/blog/${post.id}`} key={post.id} className="block group">
                   <Card
-                    className={`overflow-hidden flex flex-col h-full group-hover:shadow-lg transition-all duration-500 group-hover:translate-y-[-5px] group-hover:border-primary ${isLoaded ? "animate-scale-in" : "opacity-0"}`}
+                    className={`overflow-hidden flex flex-col h-full group-hover:shadow-lg transition-all duration-500 group-hover:translate-y-[-5px] group-hover:border-primary relative ${isLoaded ? "animate-scale-in" : "opacity-0"}`}
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
+                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
                     <div className="relative h-48 overflow-hidden">
                       <img
                         src={post.image || "/placeholder.svg?height=400&width=600"}
@@ -227,10 +228,11 @@ export default function BlogPage() {
             filteredPosts.map((post, index) => (
               <Link href={`/blog/${post.id}`} key={post.id} className="block group">
                 <Card
-                  className={`overflow-hidden flex flex-col h-full hover:shadow-md transition-all duration-500 hover:translate-y-[-5px] hover:border-primary ${isLoaded ? "animate-slide-up" : "opacity-0"}`}
+                  className={`overflow-hidden flex flex-col h-full group-hover:shadow-lg transition-all duration-500 group-hover:translate-y-[-5px] group-hover:border-primary ${isLoaded ? "animate-slide-up" : "opacity-0"}`}
                   style={{ animationDelay: `${(index + 1) * 100}ms` }}
                 >
-                  <div className="h-40 overflow-hidden">
+                  <div className="relative h-40 overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
                     <img
                       src={post.image || "/placeholder.svg?height=400&width=600"}
                       alt={post.title}

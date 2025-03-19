@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -19,9 +19,19 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
   const { signUpWithEmail, signInWithGoogle, demoMode } = useAuth()
   const { toast } = useToast()
   const router = useRouter()
+
+  // Set isLoaded to true after component mounts for animations
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoaded(true)
+    }, 100)
+
+    return () => clearTimeout(timer)
+  }, [])
 
   const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -73,15 +83,28 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="container flex items-center justify-center min-h-[calc(100vh-4rem)] py-12">
-      <div className="mx-auto w-full max-w-md space-y-6 bg-card p-8 rounded-lg border shadow-sm">
+    <div className="container flex items-center justify-center min-h-[calc(100vh-4rem)] py-12 relative">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl animate-pulse-glow"></div>
+        <div
+          className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl animate-pulse-glow"
+          style={{ animationDelay: "1s" }}
+        ></div>
+      </div>
+
+      <div
+        className={`mx-auto w-full max-w-md space-y-6 bg-card p-8 rounded-lg border shadow-sm relative transition-all duration-700 ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
+      >
         <div className="space-y-2 text-center">
-          <h1 className="text-3xl font-bold">계정 만들기</h1>
-          <p className="text-muted-foreground">계정을 만들기 위한 정보를 입력하세요</p>
+          <h1 className="text-3xl font-bold animate-fade-in">계정 만들기</h1>
+          <p className="text-muted-foreground animate-fade-in" style={{ animationDelay: "100ms" }}>
+            계정을 만들기 위한 정보를 입력하세요
+          </p>
         </div>
 
         {demoMode && (
-          <Alert>
+          <Alert className="animate-slide-up" style={{ animationDelay: "200ms" }}>
             <InfoIcon className="h-4 w-4" />
             <AlertDescription>
               데모 모드: 회원가입이 시뮬레이션됩니다. <strong>demo@example.com</strong> / <strong>password</strong>로
@@ -90,8 +113,15 @@ export default function RegisterPage() {
           </Alert>
         )}
 
-        <Button variant="outline" className="w-full" onClick={handleGoogleSignUp} disabled={isLoading}>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-5 w-5 mr-2">
+        <Button
+          variant="outline"
+          className="w-full animate-slide-up relative overflow-hidden group"
+          style={{ animationDelay: "300ms" }}
+          onClick={handleGoogleSignUp}
+          disabled={isLoading}
+        >
+          <div className="absolute inset-0 w-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 transition-all duration-300 group-hover:w-full"></div>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-5 w-5 mr-2 relative z-10">
             <path
               fill="#4285F4"
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -109,10 +139,10 @@ export default function RegisterPage() {
               d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
             />
           </svg>
-          Google로 가입하기
+          <span className="relative z-10">Google로 가입하기</span>
         </Button>
 
-        <div className="relative">
+        <div className="relative animate-fade-in" style={{ animationDelay: "400ms" }}>
           <div className="absolute inset-0 flex items-center">
             <Separator className="w-full" />
           </div>
@@ -121,7 +151,7 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        <form onSubmit={handleEmailSignUp} className="space-y-4">
+        <form onSubmit={handleEmailSignUp} className="space-y-4 animate-slide-up" style={{ animationDelay: "500ms" }}>
           <div className="space-y-2">
             <Label htmlFor="email">이메일</Label>
             <Input
@@ -131,6 +161,7 @@ export default function RegisterPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              className="transition-all duration-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50"
             />
           </div>
           <div className="space-y-2">
@@ -142,6 +173,7 @@ export default function RegisterPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              className="transition-all duration-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50"
             />
           </div>
           <div className="space-y-2">
@@ -153,17 +185,45 @@ export default function RegisterPage() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
+              className="transition-all duration-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50"
             />
           </div>
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "계정 생성 중..." : "계정 생성하기"}
+          <Button
+            type="submit"
+            className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white border-0 shadow-md hover:shadow-lg transition-all duration-300 hover:translate-y-[-3px]"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <span className="flex items-center">
+                <svg
+                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                계정 생성 중...
+              </span>
+            ) : (
+              "계정 생성하기"
+            )}
           </Button>
         </form>
 
-        <div className="text-center text-sm">
+        <div className="text-center text-sm animate-fade-in" style={{ animationDelay: "600ms" }}>
           이미 계정이 있으신가요?{" "}
-          <Link href="/login" className="font-medium text-primary underline-offset-4 hover:underline">
+          <Link
+            href="/login"
+            className="font-medium text-primary underline-offset-4 hover:underline transition-colors duration-300 relative group"
+          >
             로그인
+            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-500 group-hover:w-full transition-all duration-300"></span>
           </Link>
         </div>
       </div>

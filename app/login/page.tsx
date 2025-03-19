@@ -10,21 +10,23 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { useAuth } from "@/lib/auth-context"
 import { useToast } from "@/hooks/use-toast"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { InfoIcon, Sparkles } from "lucide-react"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
-  const { signInWithEmail, signInWithGoogle, demoMode } = useAuth()
+  const { signInWithEmail, signInWithGoogle } = useAuth()
   const { toast } = useToast()
   const router = useRouter()
 
   // Set isLoaded to true after component mounts for animations
   useEffect(() => {
-    setIsLoaded(true)
+    const timer = setTimeout(() => {
+      setIsLoaded(true)
+    }, 100)
+
+    return () => clearTimeout(timer)
   }, [])
 
   const handleEmailLogin = async (e: React.FormEvent) => {
@@ -57,9 +59,7 @@ export default function LoginPage() {
     try {
       await signInWithGoogle()
       // In demo mode, we need to redirect manually since there's no actual OAuth flow
-      if (demoMode) {
-        router.push("/")
-      }
+      router.push("/")
       // No need to redirect here for real OAuth as it will handle the redirect
     } catch (error) {
       console.error("Google login error:", error)
@@ -81,11 +81,6 @@ export default function LoginPage() {
       <div
         className={`mx-auto w-full max-w-md space-y-6 bg-card p-8 rounded-lg border shadow-sm relative transition-all duration-700 ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
       >
-        {/* Decorative corner sparkle */}
-        <div className="absolute -top-3 -right-3 transform rotate-12 animate-pulse-glow">
-          <Sparkles className="h-6 w-6 text-indigo-400" />
-        </div>
-
         <div className="space-y-2 text-center">
           <h1 className="text-3xl font-bold animate-fade-in">환영합니다</h1>
           <p className="text-muted-foreground animate-fade-in" style={{ animationDelay: "100ms" }}>
@@ -93,20 +88,10 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {demoMode && (
-          <Alert className="animate-slide-up" style={{ animationDelay: "200ms" }}>
-            <InfoIcon className="h-4 w-4" />
-            <AlertDescription>
-              데모 모드: <strong>demo@example.com</strong> / <strong>password</strong>로 로그인하거나 Google 로그인을
-              클릭하세요.
-            </AlertDescription>
-          </Alert>
-        )}
-
         <Button
           variant="outline"
           className="w-full animate-slide-up relative overflow-hidden group"
-          style={{ animationDelay: "300ms" }}
+          style={{ animationDelay: "200ms" }}
           onClick={handleGoogleLogin}
           disabled={isLoading}
         >
@@ -132,7 +117,7 @@ export default function LoginPage() {
           <span className="relative z-10">Google로 계속하기</span>
         </Button>
 
-        <div className="relative animate-fade-in" style={{ animationDelay: "400ms" }}>
+        <div className="relative animate-fade-in" style={{ animationDelay: "300ms" }}>
           <div className="absolute inset-0 flex items-center">
             <Separator className="w-full" />
           </div>
@@ -141,7 +126,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <form onSubmit={handleEmailLogin} className="space-y-4 animate-slide-up" style={{ animationDelay: "500ms" }}>
+        <form onSubmit={handleEmailLogin} className="space-y-4 animate-slide-up" style={{ animationDelay: "400ms" }}>
           <div className="space-y-2">
             <Label htmlFor="email">이메일</Label>
             <Input
@@ -202,7 +187,7 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        <div className="text-center text-sm animate-fade-in" style={{ animationDelay: "600ms" }}>
+        <div className="text-center text-sm animate-fade-in" style={{ animationDelay: "500ms" }}>
           계정이 없으신가요?{" "}
           <Link
             href="/register"

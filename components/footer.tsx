@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Heart } from "lucide-react"
 
 export function Footer() {
   const [isLoaded, setIsLoaded] = useState(false)
@@ -14,7 +13,7 @@ export function Footer() {
   return (
     <footer className="bg-[#080810] text-gray-400 py-10 border-t border-indigo-900/30 relative overflow-hidden">
       {/* Animated background elements */}
-      <div className="absolute inset-0 pointer-events-none">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-indigo-500/0 via-indigo-500/50 to-indigo-500/0 animate-shimmer"></div>
         <div className="absolute -top-20 -left-20 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl animate-pulse-glow"></div>
         <div
@@ -57,14 +56,6 @@ export function Footer() {
             <span className="text-gray-400 cursor-default">이용약관</span>
             <span>|</span>
             <span className="text-gray-400 cursor-default">개인정보처리방침</span>
-          </div>
-
-          <div
-            className={`text-center text-xs text-gray-500 pt-4 transition-all duration-700 delay-300 ${isLoaded ? "opacity-100" : "opacity-0"}`}
-          >
-            <p className="flex items-center justify-center gap-1">
-              Made with <Heart className="h-3 w-3 text-red-500 animate-heartbeat" /> and passion
-            </p>
           </div>
         </div>
       </div>
