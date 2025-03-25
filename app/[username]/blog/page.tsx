@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 import { getUserProfileByUsername, getUserBlogPosts } from "@/lib/supabase-client";
 import { notFound } from "next/navigation";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +8,24 @@ import { Calendar, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
 
-export default async function UserBlogPage({ params }: { params: { username: string } }) {
+// Next.js 13+ 페이지 컴포넌트 타입 정의
+type UserBlogPageProps = {
+  params: {
+    username: string;
+  };
+};
+
+export async function generateMetadata({ params }: UserBlogPageProps): Promise<Metadata> {
+  const { username } = params;
+  const userProfile = await getUserProfileByUsername(username);
+
+  return {
+    title: userProfile ? `${userProfile.displayName || userProfile.username}의 블로그` : "블로그",
+    description: userProfile?.bio || "사용자 블로그",
+  };
+}
+
+export default async function UserBlogPage({ params }: UserBlogPageProps) {
   const { username } = params;
 
   const userProfile = await getUserProfileByUsername(username);
