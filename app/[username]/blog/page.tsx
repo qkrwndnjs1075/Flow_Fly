@@ -9,13 +9,14 @@ import Link from "next/link";
 import { format } from "date-fns";
 
 // Next.js 앱 라우터에 맞는 페이지 props 타입 정의
-type PageProps = {
+export type PageProps = {
   params: {
     username: string;
   };
+  searchParams: { [key: string]: string | string[] | undefined };
 };
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: { username: string } }): Promise<Metadata> {
   const { username } = params;
   const userProfile = await getUserProfileByUsername(username);
 
