@@ -8,7 +8,12 @@ import { Calendar, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
 
-export async function generateMetadata({ params }: { params: { username: string } }): Promise<Metadata> {
+// PageProps 명확하게 정의
+interface PageProps {
+  params: { username: string };
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const userProfile = await getUserProfileByUsername(params.username);
 
   return {
@@ -17,7 +22,7 @@ export async function generateMetadata({ params }: { params: { username: string 
   };
 }
 
-export default async function UserBlogPage({ params }: { params: { username: string } }) {
+export default async function UserBlogPage({ params }: PageProps) {
   const userProfile = await getUserProfileByUsername(params.username);
 
   if (!userProfile) {
@@ -84,7 +89,6 @@ export default async function UserBlogPage({ params }: { params: { username: str
                     </CardContent>
                     <CardFooter>
                       <Button asChild>
-                        {/* 핵심 수정 부분: params.username 사용 */}
                         <Link href={`/${params.username}/blog/${post.slug}`}>
                           자세히 보기
                           <ArrowRight className="ml-2 h-4 w-4" />
