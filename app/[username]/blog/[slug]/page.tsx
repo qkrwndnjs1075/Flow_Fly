@@ -1,4 +1,3 @@
-import { Metadata } from "next";
 import { getUserProfileByUsername, getBlogPostBySlug } from "@/lib/supabase-client";
 import { notFound } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -7,31 +6,10 @@ import { ArrowLeft, Calendar } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
 
-// 타입 정의를 약간 수정
-type PageProps = {
-  params: {
-    username: string;
-    slug: string;
-  };
-  searchParams?: { [key: string]: string | string[] | undefined };
-};
+export default async function BlogPostPage({ params }: { params: Promise<{ username: string; slug: string }> }) {
+  // params가 Promise이므로 await로 값을 가져옵니다.
+  const { username, slug } = await params;
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { username, slug } = params;
-  const post = await getBlogPostBySlug(username, slug);
-
-  if (!post) {
-    return {};
-  }
-
-  return {
-    title: post.title,
-    description: post.content.substring(0, 160),
-  };
-}
-
-export default async function BlogPostPage({ params }: PageProps) {
-  const { username, slug } = params;
   const userProfile = await getUserProfileByUsername(username);
 
   if (!userProfile) {
