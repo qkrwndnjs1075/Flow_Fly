@@ -8,18 +8,9 @@ import { Calendar, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
 
-// 타입 수정: Promise 제거
-type PageProps = {
-  params: {
-    username: string;
-    [key: string]: string; // Promise<string> → string으로 변경
-  };
-  searchParams?: { [key: string]: string | string[] | undefined };
-};
-
+// 타입 직접 정의 대신 Next.js 기본 타입 활용
 export async function generateMetadata({ params }: { params: { username: string } }): Promise<Metadata> {
-  const { username } = params;
-  const userProfile = await getUserProfileByUsername(username);
+  const userProfile = await getUserProfileByUsername(params.username);
 
   return {
     title: userProfile ? `${userProfile.displayName || userProfile.username}의 블로그` : "블로그",
@@ -27,10 +18,12 @@ export async function generateMetadata({ params }: { params: { username: string 
   };
 }
 
-export default async function UserBlogPage({ params }: PageProps) {
-  const { username } = params;
-
-  const userProfile = await getUserProfileByUsername(username);
+export default async function UserBlogPage({
+  params,
+}: {
+  params: { username: string }; // 간소화된 타입 정의
+}) {
+  const userProfile = await getUserProfileByUsername(params.username);
 
   if (!userProfile) {
     notFound();
