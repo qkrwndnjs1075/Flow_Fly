@@ -197,6 +197,16 @@ export default function LoginPage() {
             <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-indigo-500 group-hover:w-full transition-all duration-300"></span>
           </Link>
         </div>
+
+        {/* 어드민 로그인 링크 추가 */}
+        <div
+          className="text-center text-xs text-muted-foreground mt-4 animate-fade-in"
+          style={{ animationDelay: "600ms" }}
+        >
+          <Link href="/admin/login" className="hover:text-indigo-400 transition-colors duration-300">
+            관리자 로그인
+          </Link>
+        </div>
       </div>
     </div>
   )

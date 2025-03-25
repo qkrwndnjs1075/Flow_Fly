@@ -2,208 +2,143 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
-import { Search, Calendar, User, X } from "lucide-react"
-
-// Mock blog data - in a real app, this would come from a database
-const blogPosts = [
-  {
-    id: 1,
-    title: "웹 개발 시작하기",
-    excerpt: "웹 개발 여정을 시작하기 위한 HTML, CSS, JavaScript의 기초를 배워보세요.",
-    date: "2025년 3월 10일",
-    author: "김지민",
-    category: "웹 개발",
-    image: "/placeholder.svg?height=400&width=600",
-    featured: true,
-    readTime: "5분",
-  },
-  {
-    id: 2,
-    title: "React Hooks의 힘",
-    excerpt: "React Hooks가 어떻게 코드를 단순화하고 컴포넌트를 더 재사용 가능하게 만드는지 알아보세요.",
-    date: "2025년 3월 5일",
-    author: "이준호",
-    category: "React",
-    image: "/placeholder.svg?height=400&width=600",
-    featured: false,
-    readTime: "8분",
-  },
-  {
-    id: 3,
-    title: "돋보이는 포트폴리오 만들기",
-    excerpt: "잠재적 고용주와 고객에게 인상을 줄 수 있는 포트폴리오를 만들기 위한 팁과 요령.",
-    date: "2025년 2월 28일",
-    author: "박서연",
-    category: "커리어",
-    image: "/placeholder.svg?height=400&width=600",
-    featured: false,
-    readTime: "6분",
-  },
-  {
-    id: 4,
-    title: "Next.js 소개",
-    excerpt: "Next.js가 왜 React 애플리케이션을 위한 필수 프레임워크가 되고 있는지 알아보세요.",
-    date: "2025년 2월 20일",
-    author: "최민준",
-    category: "Next.js",
-    image: "/placeholder.svg?height=400&width=600",
-    featured: true,
-    readTime: "7분",
-  },
-  {
-    id: 5,
-    title: "TypeScript로 코드 품질 향상하기",
-    excerpt: "TypeScript를 사용하여 JavaScript 프로젝트의 코드 품질과 유지보수성을 높이는 방법.",
-    date: "2025년 2월 15일",
-    author: "정다은",
-    category: "TypeScript",
-    image: "/placeholder.svg?height=400&width=600",
-    featured: false,
-    readTime: "10분",
-  },
-  {
-    id: 6,
-    title: "UI/UX 디자인 기초",
-    excerpt: "사용자 경험을 향상시키는 효과적인 UI/UX 디자인 원칙과 실전 팁.",
-    date: "2025년 2월 10일",
-    author: "김지민",
-    category: "디자인",
-    image: "/placeholder.svg?height=400&width=600",
-    featured: false,
-    readTime: "9분",
-  },
-]
-
-// Get unique categories
-const categories = ["전체", ...new Set(blogPosts.map((post) => post.category))]
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Search, Calendar, User, ArrowRight, X, PlusCircle } from "lucide-react"
+import { useAuth } from "@/lib/auth-context"
+import { BlogCategories } from "@/components/blog-categories"
+import { BlogTags } from "@/components/blog-tags"
+import { BlogVisitorStats } from "@/components/blog-visitor-stats"
+import { categories, tags, blogPosts, getPostsByCategoryId, findCategoryById, getCategoryPath } from "@/lib/blog-data"
 
 export default function BlogPage() {
-  const [activeCategory, setActiveCategory] = useState("전체")
   const [searchQuery, setSearchQuery] = useState("")
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>("all")
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([])
+  const [filteredPosts, setFilteredPosts] = useState(blogPosts)
   const [isLoaded, setIsLoaded] = useState(false)
+  const [categoryPath, setCategoryPath] = useState<string[]>([])
+  const { user } = useAuth()
 
-  // Set isLoaded to true after component mounts for animations
+  // 컴포넌트 마운트 후 애니메이션을 위한 상태 설정
   useEffect(() => {
     setIsLoaded(true)
   }, [])
 
-  // Filter posts based on active category and search query
-  const filteredPosts = blogPosts.filter((post) => {
-    const matchesCategory = activeCategory === "전체" || post.category === activeCategory
-    const matchesSearch =
-      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.excerpt.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesCategory && matchesSearch
-  })
+  // 카테고리 선택 시 경로 업데이트
+  useEffect(() => {
+    if (selectedCategoryId && selectedCategoryId !== "all") {
+      const path = getCategoryPath(selectedCategoryId)
+      setCategoryPath(path.map((cat) => cat.name))
+    } else {
+      setCategoryPath([])
+    }
+  }, [selectedCategoryId])
 
-  // Get featured posts
-  const featuredPosts = blogPosts.filter((post) => post.featured)
+  // 검색어, 카테고리, 태그에 따라 포스트 필터링
+  useEffect(() => {
+    let filtered = [...blogPosts]
+
+    // 카테고리 필터링
+    if (selectedCategoryId && selectedCategoryId !== "all") {
+      filtered = getPostsByCategoryId(selectedCategoryId)
+    }
+
+    // 태그 필터링
+    if (selectedTagIds.length > 0) {
+      filtered = filtered.filter((post) => selectedTagIds.every((tagId) => post.tags.includes(tagId)))
+    }
+
+    // 검색어 필터링
+    if (searchQuery) {
+      filtered = filtered.filter(
+        (post) =>
+          post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()),
+      )
+    }
+
+    // 날짜순 정렬
+    filtered = filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+
+    setFilteredPosts(filtered)
+  }, [searchQuery, selectedCategoryId, selectedTagIds])
+
+  // 태그 선택/해제 처리
+  const handleTagSelect = (tagId: string) => {
+    setSelectedTagIds((prev) => (prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]))
+  }
+
+  // 카테고리 선택 처리
+  const handleCategorySelect = (categoryId: string) => {
+    setSelectedCategoryId(categoryId)
+    // 카테고리 변경 시 태그 선택 초기화
+    setSelectedTagIds([])
+  }
 
   return (
-    <div className="container py-12">
-      <div className="space-y-10">
-        {/* Header */}
-        <div
-          className={`space-y-4 text-right pr-8 transition-all duration-700 ${isLoaded ? "opacity-100" : "opacity-0 translate-y-10"}`}
-        >
-          <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">블로그</h1>
-          <p className="text-muted-foreground md:text-xl max-w-2xl ml-auto">
-            디자인, 개발 등에 관한 생각, 이야기, 아이디어를 공유합니다.
-          </p>
-        </div>
-
-        {/* Featured Posts */}
-        {featuredPosts.length > 0 && (
-          <div
-            className={`space-y-4 transition-all duration-700 delay-100 ${isLoaded ? "opacity-100" : "opacity-0 translate-y-10"}`}
-          >
-            <h2 className="text-2xl font-bold">추천 글</h2>
-            <div className="grid gap-6 md:grid-cols-2">
-              {featuredPosts.map((post, index) => (
-                <Link href={`/blog/${post.id}`} key={post.id} className="block group">
-                  <Card
-                    className={`overflow-hidden flex flex-col h-full group-hover:shadow-lg transition-all duration-500 group-hover:translate-y-[-5px] group-hover:border-primary relative ${isLoaded ? "animate-scale-in" : "opacity-0"}`}
-                    style={{ animationDelay: `${index * 100}ms` }}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-                    <div className="relative h-48 overflow-hidden">
-                      <img
-                        src={post.image || "/placeholder.svg?height=400&width=600"}
-                        alt={post.title}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                      />
-                      <Badge className="absolute top-3 right-3 bg-primary text-primary-foreground animate-pulse-glow">
-                        추천
-                      </Badge>
-                    </div>
-                    <CardHeader className="flex-1">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                        <Badge
-                          variant="outline"
-                          className="bg-indigo-900/20 border-indigo-500/50 hover:bg-indigo-900/30"
-                        >
-                          {post.category}
-                        </Badge>
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" /> {post.date}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <User className="h-3 w-3" /> {post.author}
-                        </span>
-                      </div>
-                      <CardTitle className="text-xl group-hover:text-primary transition-colors duration-300">
-                        {post.title}
-                      </CardTitle>
-                      <CardDescription className="line-clamp-2 mt-2">{post.excerpt}</CardDescription>
-                    </CardHeader>
-                    <CardFooter className="pt-0">
-                      <div className="w-full flex items-center justify-start group-hover:text-primary transition-colors duration-300">
-                        <span>더 읽기</span>{" "}
-                        <span className="ml-2 transform transition-transform duration-300 group-hover:translate-x-2">
-                          →
-                        </span>
-                      </div>
-                    </CardFooter>
-                  </Card>
-                </Link>
-              ))}
+    <div className="container py-8">
+      <div className="flex flex-col md:flex-row gap-8">
+        {/* 왼쪽 사이드바 */}
+        <div className="w-full md:w-64 space-y-8">
+          {/* 공지사항 - 이제 맨 위로 이동 */}
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold flex items-center">
+              <span className="relative">
+                공지사항
+                <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-indigo-500 to-purple-600 animate-pulse-glow"></span>
+              </span>
+            </h2>
+            <div className="bg-[#161625] p-4 rounded-lg border border-indigo-900/30">
+              <p className="text-sm text-muted-foreground">
+                블로그가 새롭게 개편되었습니다. 더 나은 경험을 위해 디자인과 기능을 개선했습니다.
+              </p>
             </div>
           </div>
-        )}
 
-        {/* Search and Filter */}
-        <div
-          className={`flex flex-col md:flex-row gap-6 items-center justify-between p-4 bg-[#161625] rounded-lg border border-indigo-900/30 transition-all duration-700 delay-200 ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
-        >
-          <div className="w-full md:w-auto">
-            <h3 className="text-sm font-medium mb-2 text-gray-300">주제별 필터링</h3>
-            <Tabs defaultValue="전체" value={activeCategory} onValueChange={setActiveCategory} className="w-full">
-              <TabsList className="grid grid-cols-3 md:grid-cols-6 h-auto p-1 bg-[#0f0f18]">
-                {categories.map((category) => (
-                  <TabsTrigger
-                    key={category}
-                    value={category}
-                    className="text-xs md:text-sm py-2 data-[state=active]:bg-indigo-600 data-[state=active]:text-white transition-all duration-300 hover:bg-indigo-900/50"
-                  >
-                    {category}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold flex items-center">
+              <span className="relative">
+                카테고리
+                <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-indigo-500 to-purple-600 animate-pulse-glow"></span>
+              </span>
+            </h2>
+            <BlogCategories
+              categories={categories}
+              selectedCategoryId={selectedCategoryId}
+              onSelectCategory={handleCategorySelect}
+            />
           </div>
 
-          <div className="relative w-full md:w-80">
-            <h3 className="text-sm font-medium mb-2 text-gray-300">글 검색</h3>
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold flex items-center">
+              <span className="relative">
+                태그
+                <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-indigo-500 to-purple-600 animate-pulse-glow"></span>
+              </span>
+            </h2>
+            <BlogTags
+              tags={tags}
+              selectedTagIds={selectedTagIds}
+              onSelectTag={handleTagSelect}
+              onClearTags={() => setSelectedTagIds([])}
+            />
+          </div>
+
+          {/* 방문자 통계 - 이제 맨 아래로 이동 */}
+          <BlogVisitorStats />
+        </div>
+
+        {/* 메인 콘텐츠 */}
+        <div className="flex-1">
+          {/* 검색 바 */}
+          <div className="mb-6">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="제목 또는 내용으로 검색..."
-                className="pl-10 bg-[#0f0f18] border-indigo-900/30 focus:border-indigo-500 h-10 transition-all duration-300 focus:ring-2 focus:ring-indigo-500/50"
+                placeholder="블로그 검색..."
+                className="pl-10 bg-[#161625] border-indigo-900/30 focus:border-indigo-500 transition-all duration-300 focus:ring-2 focus:ring-indigo-500/50"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -220,68 +155,188 @@ export default function BlogPage() {
               )}
             </div>
           </div>
-        </div>
 
-        {/* Blog Posts Grid */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredPosts.length > 0 ? (
-            filteredPosts.map((post, index) => (
-              <Link href={`/blog/${post.id}`} key={post.id} className="block group">
-                <Card
-                  className={`overflow-hidden flex flex-col h-full group-hover:shadow-lg transition-all duration-500 group-hover:translate-y-[-5px] group-hover:border-primary ${isLoaded ? "animate-slide-up" : "opacity-0"}`}
-                  style={{ animationDelay: `${(index + 1) * 100}ms` }}
-                >
-                  <div className="relative h-40 overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-                    <img
-                      src={post.image || "/placeholder.svg?height=400&width=600"}
-                      alt={post.title}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
-                  </div>
-                  <CardHeader className="flex-1">
-                    <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
-                      <Badge variant="outline" className="bg-indigo-900/20 border-indigo-500/50 hover:bg-indigo-900/30">
-                        {post.category}
-                      </Badge>
-                      <span>{post.readTime} 소요</span>
-                    </div>
-                    <CardTitle className="text-lg group-hover:text-primary transition-colors duration-300">
-                      {post.title}
-                    </CardTitle>
-                    <CardDescription className="line-clamp-2 mt-2">{post.excerpt}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-0 pb-4">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Calendar className="h-3 w-3" /> {post.date}
-                      <span className="mx-1">•</span>
-                      <User className="h-3 w-3" /> {post.author}
-                    </div>
-                  </CardContent>
-                  <CardFooter className="pt-0">
-                    <div className="w-full flex items-center justify-start group-hover:text-primary transition-colors duration-300">
-                      <span>더 읽기</span>{" "}
-                      <span className="ml-2 transform transition-transform duration-300 group-hover:translate-x-2">
-                        →
-                      </span>
-                    </div>
-                  </CardFooter>
-                </Card>
-              </Link>
-            ))
-          ) : (
-            <div className="col-span-full text-center py-12 animate-fade-in">
-              <p className="text-muted-foreground">검색 결과가 없습니다.</p>
-              <Button
-                variant="outline"
-                className="mt-4 hover:bg-indigo-900/20 hover:border-indigo-500 transition-all duration-300"
-                onClick={() => {
-                  setActiveCategory("전체")
-                  setSearchQuery("")
-                }}
+          {/* 현재 카테고리 경로 */}
+          {categoryPath.length > 0 && (
+            <div className="mb-6 flex items-center text-sm text-muted-foreground animate-fade-in">
+              <span
+                className="cursor-pointer hover:text-indigo-400 transition-colors"
+                onClick={() => setSelectedCategoryId("all")}
               >
-                모든 글 보기
+                전체 글
+              </span>
+              {categoryPath.map((name, index) => (
+                <div key={index} className="flex items-center">
+                  <span className="mx-2">/</span>
+                  <span
+                    className={`
+                      cursor-pointer 
+                      ${
+                        index === categoryPath.length - 1
+                          ? "text-indigo-400"
+                          : "hover:text-indigo-400 transition-colors"
+                      }
+                    `}
+                    onClick={() => {
+                      if (index < categoryPath.length - 1) {
+                        const category = findCategoryById(selectedCategoryId || "")
+                        if (category?.parentId) {
+                          setSelectedCategoryId(category.parentId)
+                        }
+                      }
+                    }}
+                  >
+                    {name}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* 새 글 작성 버튼 (로그인한 경우) */}
+          {user && (
+            <div className="mb-6 flex justify-end animate-fade-in">
+              <Button
+                asChild
+                className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
+              >
+                <Link href="/blog/create">
+                  <PlusCircle className="h-4 w-4 mr-2" /> 새 글 작성
+                </Link>
               </Button>
+            </div>
+          )}
+
+          {/* 블로그 포스트 목록 */}
+          <div className="space-y-6">
+            {filteredPosts.length > 0 ? (
+              filteredPosts.map((post, index) => {
+                const category = findCategoryById(post.categoryId)
+
+                return (
+                  <Link
+                    href={`/blog/${post.id}`}
+                    key={post.id}
+                    className={`block group transition-all duration-500 ${
+                      isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+                    }`}
+                    style={{ transitionDelay: `${index * 50}ms` }}
+                  >
+                    <article className="blog-card flex flex-col md:flex-row gap-4 p-4 rounded-lg border border-indigo-900/20 hover:border-indigo-500/50 bg-[#161625] hover:bg-[#1a1a2e] transition-all duration-300 hover:shadow-lg hover:shadow-indigo-900/10">
+                      <div className="md:flex-1 space-y-2">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Badge
+                            variant="outline"
+                            className="bg-indigo-900/20 border-indigo-500/50 hover:bg-indigo-900/30"
+                          >
+                            {category?.name || post.categoryId}
+                          </Badge>
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" /> {post.date}
+                          </span>
+                        </div>
+                        <h2 className="text-xl font-bold group-hover:text-indigo-400 transition-colors duration-300">
+                          {post.title}
+                        </h2>
+                        <p className="text-muted-foreground line-clamp-2">{post.excerpt}</p>
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          {post.tags.slice(0, 3).map((tagId) => {
+                            const tag = tags.find((t) => t.id === tagId)
+                            return tag ? (
+                              <Badge
+                                key={tag.id}
+                                variant="secondary"
+                                className="text-xs bg-indigo-900/10 border-indigo-900/30"
+                              >
+                                {tag.name}
+                              </Badge>
+                            ) : null
+                          })}
+                          {post.tags.length > 3 && (
+                            <Badge variant="secondary" className="text-xs bg-indigo-900/10 border-indigo-900/30">
+                              +{post.tags.length - 3}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between pt-1">
+                          <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                            <User className="h-3 w-3" /> {post.author}
+                          </span>
+                          <span className="text-sm text-indigo-400 flex items-center group-hover:translate-x-1 transition-transform duration-300">
+                            더 읽기 <ArrowRight className="h-3 w-3 ml-1" />
+                          </span>
+                        </div>
+                      </div>
+                      <div className="md:w-1/4 h-32 md:h-auto overflow-hidden rounded-md">
+                        <img
+                          src={post.image || "/placeholder.svg"}
+                          alt={post.title}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        />
+                      </div>
+                    </article>
+                  </Link>
+                )
+              })
+            ) : (
+              <div className="text-center py-12 animate-fade-in">
+                <p className="text-muted-foreground mb-4">검색 결과가 없습니다.</p>
+                <Button
+                  variant="outline"
+                  className="hover:bg-indigo-900/20 hover:border-indigo-500 transition-all duration-300"
+                  onClick={() => {
+                    setSearchQuery("")
+                    setSelectedCategoryId("all")
+                    setSelectedTagIds([])
+                  }}
+                >
+                  모든 글 보기
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* 페이지네이션 */}
+          {filteredPosts.length > 0 && (
+            <div className="mt-8 flex justify-center animate-fade-in" style={{ animationDelay: "300ms" }}>
+              <nav className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="w-8 h-8 bg-[#161625] border-indigo-900/30 hover:bg-indigo-900/20 hover:text-indigo-400"
+                >
+                  &lt;
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="w-8 h-8 bg-indigo-900/20 border-indigo-500 text-indigo-400"
+                >
+                  1
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="w-8 h-8 bg-[#161625] border-indigo-900/30 hover:bg-indigo-900/20 hover:text-indigo-400"
+                >
+                  2
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="w-8 h-8 bg-[#161625] border-indigo-900/30 hover:bg-indigo-900/20 hover:text-indigo-400"
+                >
+                  3
+                </Button>
+                <span className="text-muted-foreground">...</span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="w-8 h-8 bg-[#161625] border-indigo-900/30 hover:bg-indigo-900/20 hover:text-indigo-400"
+                >
+                  &gt;
+                </Button>
+              </nav>
             </div>
           )}
         </div>

@@ -4,7 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/lib/auth-context";
 import { Toaster } from "@/components/ui/toaster";
 import { Footer } from "@/components/footer";
-import AppProvider from "../components/AppProvider";
+import AppProvider from "@/components/AppProvider"; // 절대 경로 사용 (상대경로 필요 시 변경)
 import "./globals.css";
 
 export const metadata = {
@@ -21,15 +21,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ko" suppressHydrationWarning className="dark">
       <head>
-        <link
-          rel="icon"
-          href="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7%202025-03-19%20093722-RTDceE3SEwtLiPPRyY8LVNRwDIbXO0.png"
-          type="image/png"
-        />
-        <link
-          rel="apple-touch-icon"
-          href="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7%202025-03-19%20093722-RTDceE3SEwtLiPPRyY8LVNRwDIbXO0.png"
-        />
+        <link rel="icon" href={metadata.icons.icon} type="image/png" />
+        <link rel="apple-touch-icon" href={metadata.icons.apple} />
       </head>
       <body className="bg-[#0f0f18]">
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>

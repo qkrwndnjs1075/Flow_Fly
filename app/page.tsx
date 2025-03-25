@@ -1,6 +1,6 @@
-import { Button } from "@/components/ui/button";
-import { ArrowRight, Briefcase, FileText, User } from "lucide-react";
-import Link from "next/link";
+import { Button } from "@/components/ui/button"
+import { ArrowRight, Briefcase, FileText, User } from "lucide-react"
+import Link from "next/link"
 
 export default function Home() {
   return (
@@ -63,14 +63,14 @@ export default function Home() {
             </div>
             <div className="space-x-4 animate-scale-in">
               <Link href="/portfolio">
-                <Button className="w-[158.93px] h-[40px] bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 shadow-md hover:shadow-lg gap-1 transition-all duration-500 hover:translate-y-[-3px]">
+                <Button className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 shadow-md hover:shadow-lg gap-1 transition-all duration-500 hover:translate-y-[-3px]">
                   포트폴리오 보기 <ArrowRight className="h-4 w-4 ml-1 animate-bounce-right" />
                 </Button>
               </Link>
               <Link href="/blog">
                 <Button
                   variant="outline"
-                  className="w-[134.13px] h-[40px] gap-1 border-2 border-white text-white hover:bg-white/10 transition-all duration-500 hover:translate-y-[-3px]"
+                  className="gap-1 border-2 border-white text-white hover:bg-white/10 transition-all duration-500 hover:translate-y-[-3px]"
                 >
                   블로그 읽기 <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1" />
                 </Button>
@@ -156,5 +156,6 @@ export default function Home() {
         </div>
       </section>
     </div>
-  );
+  )
 }
+
