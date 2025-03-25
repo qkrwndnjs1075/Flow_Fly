@@ -6,9 +6,9 @@ import { ArrowLeft, Calendar } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
 
-export default async function BlogPostPage({ params }: { params: Promise<{ username: string; slug: string }> }) {
-  // params가 Promise이므로 await로 값을 가져옵니다.
-  const { username, slug } = await params;
+export default async function BlogPostPage({ params }: { params: Promise<{ username: string }> }) {
+  // params가 Promise이므로, 이를 await로 처리하여 값을 가져옵니다.
+  const { username } = await params;
 
   const userProfile = await getUserProfileByUsername(username);
 
@@ -16,7 +16,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ usern
     notFound();
   }
 
-  const post = await getBlogPostBySlug(username, slug);
+  const post = await getBlogPostBySlug(username, username); // slug는 수정된 변수로 변경 가능
 
   if (!post) {
     notFound();
