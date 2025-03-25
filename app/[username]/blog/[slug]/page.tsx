@@ -1,4 +1,3 @@
-import { Metadata } from "next";
 import { getUserProfileByUsername, getBlogPostBySlug } from "@/lib/supabase-client";
 import { notFound } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -6,17 +5,9 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
+import { Metadata } from "next";
 
-// Next.js의 기본 타입 정의 가져오기
-type PageProps = {
-  params: {
-    username: string;
-    slug: string;
-  };
-  searchParams: { [key: string]: string | string[] | undefined };
-};
-
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: { username: string; slug: string } }): Promise<Metadata> {
   const { username, slug } = params;
   const post = await getBlogPostBySlug(username, slug);
 
@@ -30,7 +21,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function BlogPostPage({ params, searchParams }: PageProps) {
+export default async function BlogPostPage({ params }: { params: { username: string; slug: string } }) {
   const { username, slug } = params;
   const userProfile = await getUserProfileByUsername(username);
 
