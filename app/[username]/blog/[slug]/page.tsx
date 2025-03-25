@@ -7,16 +7,16 @@ import { ArrowLeft, Calendar } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
 
-// 페이지 매개변수 타입 정의
-type PageParams = {
+// Next.js의 기본 타입 정의 가져오기
+type PageProps = {
   params: {
     username: string;
     slug: string;
   };
+  searchParams: { [key: string]: string | string[] | undefined };
 };
 
-// 메타데이터 생성 함수
-export async function generateMetadata({ params }: PageParams): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { username, slug } = params;
   const post = await getBlogPostBySlug(username, slug);
 
@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
   };
 }
 
-export default async function BlogPostPage({ params }: PageParams) {
+export default async function BlogPostPage({ params, searchParams }: PageProps) {
   const { username, slug } = params;
   const userProfile = await getUserProfileByUsername(username);
 
