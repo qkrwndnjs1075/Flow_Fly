@@ -1,27 +1,30 @@
-import { getUserProfileByUsername, getBlogPostBySlug } from "@/lib/supabase-client"
-import { notFound } from "next/navigation"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft, Calendar } from "lucide-react"
-import Link from "next/link"
-import { format } from "date-fns"
+import { getUserProfileByUsername, getBlogPostBySlug } from "@/lib/supabase-client";
+import { notFound } from "next/navigation";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Calendar } from "lucide-react";
+import Link from "next/link";
+import { format } from "date-fns";
 
-export default async function BlogPostPage({
-  params,
-}: {
-  params: { username: string; slug: string }
-}) {
-  const { username, slug } = params
-  const userProfile = await getUserProfileByUsername(username)
+type BlogPostPageProps = {
+  params: {
+    username: string;
+    slug: string;
+  };
+};
+
+export default async function BlogPostPage({ params }: BlogPostPageProps) {
+  const { username, slug } = params;
+  const userProfile = await getUserProfileByUsername(username);
 
   if (!userProfile) {
-    notFound()
+    notFound();
   }
 
-  const post = await getBlogPostBySlug(username, slug)
+  const post = await getBlogPostBySlug(username, slug);
 
   if (!post) {
-    notFound()
+    notFound();
   }
 
   return (
@@ -79,6 +82,5 @@ export default async function BlogPostPage({
         </div>
       </div>
     </div>
-  )
+  );
 }
-
