@@ -8,11 +8,11 @@ import { Calendar, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
 
-// Next.js 타입 정의에 맞춘 최적화된 PageProps
+// 타입 수정: Promise 제거
 type PageProps = {
   params: {
     username: string;
-    [key: string]: string | Promise<string>;
+    [key: string]: string; // Promise<string> → string으로 변경
   };
   searchParams?: { [key: string]: string | string[] | undefined };
 };
