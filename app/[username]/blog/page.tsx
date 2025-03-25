@@ -8,14 +8,14 @@ import { Calendar, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
 
-// Next.js 13+ 페이지 컴포넌트 타입 정의
-type UserBlogPageProps = {
+// Next.js 앱 라우터에 맞는 페이지 props 타입 정의
+type PageProps = {
   params: {
     username: string;
   };
 };
 
-export async function generateMetadata({ params }: UserBlogPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { username } = params;
   const userProfile = await getUserProfileByUsername(username);
 
@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: UserBlogPageProps): Promise<M
   };
 }
 
-export default async function UserBlogPage({ params }: UserBlogPageProps) {
+export default async function UserBlogPage({ params }: PageProps) {
   const { username } = params;
 
   const userProfile = await getUserProfileByUsername(username);
