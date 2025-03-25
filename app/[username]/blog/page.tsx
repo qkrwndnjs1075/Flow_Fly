@@ -7,9 +7,8 @@ import { Calendar, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
 
-export default async function UserBlogPage({ params }: { params: Promise<{ username: string }> }) {
-  // params가 Promise이므로 await로 값을 가져옵니다.
-  const { username } = await params;
+export default async function UserBlogPage({ params }: { params: { username: string } }) {
+  const { username } = params;
 
   const userProfile = await getUserProfileByUsername(username);
 
