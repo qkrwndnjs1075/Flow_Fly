@@ -1,21 +1,23 @@
-import { getUserProfileByUsername, getUserBlogPosts } from "@/lib/supabase-client"
-import { notFound } from "next/navigation"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Calendar, ArrowRight } from "lucide-react"
-import Link from "next/link"
-import { format } from "date-fns"
+import { getUserProfileByUsername, getUserBlogPosts } from "@/lib/supabase-client";
+import { notFound } from "next/navigation";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Calendar, ArrowRight } from "lucide-react";
+import Link from "next/link";
+import { format } from "date-fns";
 
-export default async function UserBlogPage({ params }: { params: { username: string } }) {
-  const { username } = params
-  const userProfile = await getUserProfileByUsername(username)
+export default async function UserBlogPage({ params }: { params: Promise<{ username: string }> }) {
+  // params가 Promise이므로 await로 값을 가져옵니다.
+  const { username } = await params;
+
+  const userProfile = await getUserProfileByUsername(username);
 
   if (!userProfile) {
-    notFound()
+    notFound();
   }
 
-  const posts = await getUserBlogPosts(userProfile.id)
+  const posts = await getUserBlogPosts(userProfile.id);
 
   return (
     <div className="container py-12">
@@ -91,6 +93,5 @@ export default async function UserBlogPage({ params }: { params: { username: str
         )}
       </div>
     </div>
-  )
+  );
 }
-
