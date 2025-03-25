@@ -3,6 +3,12 @@
   <br>
   
   **Plob**
+  <br>
+  
+  **client : 개발 중**
+  <br>
+
+  **server : 예정**
 
 -> https://plob.parkjoowon.site/
 
