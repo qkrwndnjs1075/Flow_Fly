@@ -8,7 +8,6 @@ import { Calendar, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
 
-// 타입 직접 정의 대신 Next.js 기본 타입 활용
 export async function generateMetadata({ params }: { params: { username: string } }): Promise<Metadata> {
   const userProfile = await getUserProfileByUsername(params.username);
 
@@ -18,11 +17,7 @@ export async function generateMetadata({ params }: { params: { username: string 
   };
 }
 
-export default async function UserBlogPage({
-  params,
-}: {
-  params: { username: string }; // 간소화된 타입 정의
-}) {
+export default async function UserBlogPage({ params }: { params: { username: string } }) {
   const userProfile = await getUserProfileByUsername(params.username);
 
   if (!userProfile) {
@@ -38,9 +33,7 @@ export default async function UserBlogPage({
           <Avatar className="h-24 w-24">
             <AvatarImage src={userProfile.photoURL || ""} alt={userProfile.displayName || userProfile.username} />
             <AvatarFallback className="text-2xl">
-              {userProfile.displayName
-                ? userProfile.displayName[0].toUpperCase()
-                : userProfile.username[0].toUpperCase()}
+              {(userProfile.displayName || userProfile.username)[0].toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div>
@@ -91,7 +84,8 @@ export default async function UserBlogPage({
                     </CardContent>
                     <CardFooter>
                       <Button asChild>
-                        <Link href={`/${username}/blog/${post.slug}`}>
+                        {/* 핵심 수정 부분: params.username 사용 */}
+                        <Link href={`/${params.username}/blog/${post.slug}`}>
                           자세히 보기
                           <ArrowRight className="ml-2 h-4 w-4" />
                         </Link>
