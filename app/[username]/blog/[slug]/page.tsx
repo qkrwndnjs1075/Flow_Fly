@@ -1,25 +1,30 @@
-import { getUserProfileByUsername, getBlogPostBySlug } from "@/lib/supabase-client";
-import { notFound } from "next/navigation";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar } from "lucide-react";
-import Link from "next/link";
-import { format } from "date-fns";
+interface PageProps {
+  params: {
+    username: string
+    slug: string
+  }
+}
 
-export default async function BlogPostPage({ params }: { params: Promise<{ username: string }> }) {
-  // params가 Promise이므로, 이를 await로 처리하여 값을 가져옵니다.
-  const { username } = await params;
+import { getUserProfileByUsername, getBlogPostBySlug } from "@/lib/supabase-client"
+import { notFound } from "next/navigation"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { ArrowLeft, Calendar } from "lucide-react"
+import Link from "next/link"
+import { format } from "date-fns"
 
-  const userProfile = await getUserProfileByUsername(username);
+export default async function BlogPostPage({ params }: PageProps) {
+  const { username, slug } = params
+  const userProfile = await getUserProfileByUsername(username)
 
   if (!userProfile) {
-    notFound();
+    notFound()
   }
 
-  const post = await getBlogPostBySlug(username, username); // slug는 수정된 변수로 변경 가능
+  const post = await getBlogPostBySlug(username, slug)
 
   if (!post) {
-    notFound();
+    notFound()
   }
 
   return (
@@ -77,5 +82,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ usern
         </div>
       </div>
     </div>
-  );
+  )
 }
+

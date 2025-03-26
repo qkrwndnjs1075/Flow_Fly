@@ -1,3 +1,9 @@
+interface PageProps {
+  params: {
+    username: string
+  }
+}
+
 import { getUserProfileByUsername, getUserPortfolioProjects } from "@/lib/supabase-client"
 import { notFound } from "next/navigation"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -5,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Github, ExternalLink } from "lucide-react"
 
-export default async function UserPortfolioPage({ params }: { params: { username: string } }) {
+export default async function UserPortfolioPage({ params }: PageProps) {
   const { username } = params
   const userProfile = await getUserProfileByUsername(username)
 

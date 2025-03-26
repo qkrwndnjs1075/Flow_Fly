@@ -1,34 +1,29 @@
-import { Metadata } from "next";
-import { getUserProfileByUsername, getUserBlogPosts } from "@/lib/supabase-client";
-import { notFound } from "next/navigation";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Calendar, ArrowRight } from "lucide-react";
-import Link from "next/link";
-import { format } from "date-fns";
+import { getUserProfileByUsername, getUserBlogPosts } from "@/lib/supabase-client"
+import { notFound } from "next/navigation"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Calendar, ArrowRight } from "lucide-react"
+import Link from "next/link"
+import { format } from "date-fns"
 
+// 타입 정의를 추가합니다
 interface PageProps {
-  params: { username: string };
+  params: {
+    username: string
+  }
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const userProfile = await getUserProfileByUsername(params.username);
-
-  return {
-    title: userProfile ? `${userProfile.displayName || userProfile.username}의 블로그` : "블로그",
-    description: userProfile?.bio || "사용자 블로그",
-  };
-}
-
+// 함수 시그니처를 수정합니다
 export default async function UserBlogPage({ params }: PageProps) {
-  const userProfile = await getUserProfileByUsername(params.username);
+  const { username } = params
+  const userProfile = await getUserProfileByUsername(username)
 
   if (!userProfile) {
-    notFound();
+    notFound()
   }
 
-  const posts = await getUserBlogPosts(userProfile.id);
+  const posts = await getUserBlogPosts(userProfile.id)
 
   return (
     <div className="container py-12">
@@ -37,7 +32,9 @@ export default async function UserBlogPage({ params }: PageProps) {
           <Avatar className="h-24 w-24">
             <AvatarImage src={userProfile.photoURL || ""} alt={userProfile.displayName || userProfile.username} />
             <AvatarFallback className="text-2xl">
-              {(userProfile.displayName || userProfile.username)[0].toUpperCase()}
+              {userProfile.displayName
+                ? userProfile.displayName[0].toUpperCase()
+                : userProfile.username[0].toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div>
@@ -88,7 +85,7 @@ export default async function UserBlogPage({ params }: PageProps) {
                     </CardContent>
                     <CardFooter>
                       <Button asChild>
-                        <Link href={`/${params.username}/blog/${post.slug}`}>
+                        <Link href={`/${username}/blog/${post.slug}`}>
                           자세히 보기
                           <ArrowRight className="ml-2 h-4 w-4" />
                         </Link>
@@ -102,5 +99,6 @@ export default async function UserBlogPage({ params }: PageProps) {
         )}
       </div>
     </div>
-  );
+  )
 }
+
