@@ -1,10 +1,3 @@
-interface PageProps {
-  params: {
-    username: string
-    slug: string
-  }
-}
-
 import { getUserProfileByUsername, getBlogPostBySlug } from "@/lib/supabase-client"
 import { notFound } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -13,7 +6,12 @@ import { ArrowLeft, Calendar } from "lucide-react"
 import Link from "next/link"
 import { format } from "date-fns"
 
-export default async function BlogPostPage({ params }: PageProps) {
+// 타입 정의를 제거하고 직접 매개변수 타입을 지정합니다
+export default async function BlogPostPage({
+  params,
+}: {
+  params: { username: string; slug: string }
+}) {
   const { username, slug } = params
   const userProfile = await getUserProfileByUsername(username)
 

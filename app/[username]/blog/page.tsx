@@ -7,15 +7,12 @@ import { Calendar, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { format } from "date-fns"
 
-// 타입 정의를 추가합니다
-interface PageProps {
-  params: {
-    username: string
-  }
-}
-
-// 함수 시그니처를 수정합니다
-export default async function UserBlogPage({ params }: PageProps) {
+// 타입 정의를 제거하고 직접 매개변수 타입을 지정합니다
+export default async function UserBlogPage({
+  params,
+}: {
+  params: { username: string }
+}) {
   const { username } = params
   const userProfile = await getUserProfileByUsername(username)
 

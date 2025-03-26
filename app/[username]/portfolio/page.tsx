@@ -1,9 +1,3 @@
-interface PageProps {
-  params: {
-    username: string
-  }
-}
-
 import { getUserProfileByUsername, getUserPortfolioProjects } from "@/lib/supabase-client"
 import { notFound } from "next/navigation"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,7 +5,12 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Github, ExternalLink } from "lucide-react"
 
-export default async function UserPortfolioPage({ params }: PageProps) {
+// 타입 정의를 제거하고 직접 매개변수 타입을 지정합니다
+export default async function UserPortfolioPage({
+  params,
+}: {
+  params: { username: string }
+}) {
   const { username } = params
   const userProfile = await getUserProfileByUsername(username)
 
