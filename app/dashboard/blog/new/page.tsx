@@ -1,8 +1,7 @@
 "use client"
 
 import type React from "react"
-
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,9 +11,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { useAuth } from "@/lib/auth-context"
 import { useToast } from "@/hooks/use-toast"
-import { createBlogPost, uploadImage } from "@/lib/supabase-client"
 import { ArrowLeft, Upload, X } from "lucide-react"
 import Link from "next/link"
+import { createBlogPost } from "@/lib/supabase-client"
 
 export default function NewBlogPostPage() {
   const { user, loading } = useAuth()
@@ -29,9 +28,21 @@ export default function NewBlogPostPage() {
     content: "",
     excerpt: "",
     tags: "",
-    published: false,
+    published: true,
+    categoryId: "programming",
   })
 
+  // 컴포넌트 마운트 상태 추적
+  const isMounted = useRef(true)
+
+  // 컴포넌트 언마운트 시 isMounted 플래그 업데이트
+  useEffect(() => {
+    return () => {
+      isMounted.current = false
+    }
+  }, [])
+
+  // 로그인 확인
   useEffect(() => {
     if (!loading && !user) {
       router.push("/login")
@@ -56,7 +67,9 @@ export default function NewBlogPostPage() {
       setImageFile(file)
       const reader = new FileReader()
       reader.onloadend = () => {
-        setImagePreview(reader.result as string)
+        if (isMounted.current) {
+          setImagePreview(reader.result as string)
+        }
       }
       reader.readAsDataURL(file)
     }
@@ -80,51 +93,107 @@ export default function NewBlogPostPage() {
     e.preventDefault()
     if (!user) return
 
+    if (!formData.title || !formData.content || !formData.slug) {
+      toast({
+        title: "필수 항목 누락",
+        description: "제목, 내용, 슬러그는 필수 항목입니다.",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
-      let coverImageUrl = undefined
-
       // 이미지 업로드 처리
+      let coverImageUrl = undefined
       if (imageFile) {
-        const path = `blog/${user.id}/${Date.now()}-${imageFile.name}`
-        coverImageUrl = await uploadImage(imageFile, path)
+        try {
+          // 실제 환경에서는 이 부분을 활성화
+          // coverImageUrl = await uploadImage(imageFile, `blog/${user.id}/${Date.now()}-${imageFile.name}`);
+
+          // 데모 모드에서는 임시 URL 사용
+          coverImageUrl = URL.createObjectURL(imageFile)
+        } catch (error) {
+          console.error("Image upload failed:", error)
+          if (isMounted.current) {
+            toast({
+              title: "이미지 업로드 실패",
+              description: "이미지 업로드 중 오류가 발생했습니다. 다시 시도해주세요.",
+              variant: "destructive",
+            })
+            setIsSubmitting(false)
+          }
+          return
+        }
       }
 
+      // 태그 처리
+      const tags = formData.tags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter((tag) => tag)
+
       // 블로그 포스트 생성
-      await createBlogPost({
-        userId: user.id,
+      const now = new Date().toISOString()
+      const newPost = {
         title: formData.title,
         slug: formData.slug,
         content: formData.content,
         excerpt: formData.excerpt || formData.content.substring(0, 150) + "...",
-        tags: formData.tags
-          .split(",")
-          .map((tag) => tag.trim())
-          .filter(Boolean),
+        tags,
         published: formData.published,
+        categoryId: formData.categoryId,
+        userId: user.id,
         coverImageUrl,
-      })
+        createdAt: now,
+        updatedAt: now,
+      }
 
-      toast({
-        title: "포스트 생성 완료",
-        description: "블로그 포스트가 성공적으로 생성되었습니다.",
-      })
+      // 데모 모드에서는 API 호출 시뮬레이션
+      if (process.env.NODE_ENV === "development" || !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+        // 시뮬레이션된 지연
+        await new Promise((resolve) => setTimeout(resolve, 1000))
 
-      router.push("/dashboard/blog")
-    } catch (error) {
+        if (isMounted.current) {
+          toast({
+            title: "블로그 포스트 생성 완료",
+            description: "새 블로그 포스트가 성공적으로 생성되었습니다.",
+          })
+
+          router.push("/dashboard/blog")
+        }
+        return
+      }
+
+      // 실제 API 호출
+      await createBlogPost(newPost)
+
+      if (isMounted.current) {
+        toast({
+          title: "블로그 포스트 생성 완료",
+          description: "새 블로그 포스트가 성공적으로 생성되었습니다.",
+        })
+
+        router.push("/dashboard/blog")
+      }
+    } catch (error: any) {
       console.error("Failed to create post:", error)
-      toast({
-        title: "포스트 생성 실패",
-        description: "블로그 포스트를 생성하는 중 오류가 발생했습니다.",
-        variant: "destructive",
-      })
+      if (isMounted.current) {
+        toast({
+          title: "포스트 생성 실패",
+          description: error.message || "블로그 포스트를 생성하는 중 오류가 발생했습니다.",
+          variant: "destructive",
+        })
+      }
     } finally {
-      setIsSubmitting(false)
+      if (isMounted.current) {
+        setIsSubmitting(false)
+      }
     }
   }
 
-  if (loading || !user) {
+  if (loading) {
     return (
       <div className="container py-12 flex items-center justify-center">
         <p>로딩 중...</p>
@@ -172,7 +241,7 @@ export default function NewBlogPostPage() {
                 required
                 placeholder="url-friendly-slug"
               />
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 URL에 사용될 고유 식별자입니다. 영문, 숫자, 하이픈만 사용하세요.
               </p>
             </div>
@@ -199,6 +268,17 @@ export default function NewBlogPostPage() {
                 onChange={handleChange}
                 placeholder="포스트 요약을 입력하세요 (비워두면 자동 생성됩니다)"
                 rows={3}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="categoryId">카테고리</Label>
+              <Input
+                id="categoryId"
+                name="categoryId"
+                value={formData.categoryId}
+                onChange={handleChange}
+                placeholder="카테고리 ID"
               />
             </div>
 

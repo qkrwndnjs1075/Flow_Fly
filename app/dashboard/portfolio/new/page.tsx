@@ -1,19 +1,19 @@
 "use client"
 
 import type React from "react"
-
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Switch } from "@/components/ui/switch"
 import { useAuth } from "@/lib/auth-context"
 import { useToast } from "@/hooks/use-toast"
-import { createPortfolioProject, uploadImage } from "@/lib/supabase-client"
 import { ArrowLeft, Upload, X } from "lucide-react"
 import Link from "next/link"
+import { createPortfolioProject } from "@/lib/supabase-client"
 
 export default function NewPortfolioProjectPage() {
   const { user, loading } = useAuth()
@@ -28,8 +28,20 @@ export default function NewPortfolioProjectPage() {
     tags: "",
     projectUrl: "",
     githubUrl: "",
+    featured: false,
   })
 
+  // 컴포넌트 마운트 상태 추적
+  const isMounted = useRef(true)
+
+  // 컴포넌트 언마운트 시 isMounted 플래그 업데이트
+  useEffect(() => {
+    return () => {
+      isMounted.current = false
+    }
+  }, [])
+
+  // 로그인 확인
   useEffect(() => {
     if (!loading && !user) {
       router.push("/login")
@@ -42,7 +54,9 @@ export default function NewPortfolioProjectPage() {
       setImageFile(file)
       const reader = new FileReader()
       reader.onloadend = () => {
-        setImagePreview(reader.result as string)
+        if (isMounted.current) {
+          setImagePreview(reader.result as string)
+        }
       }
       reader.readAsDataURL(file)
     }
@@ -58,54 +72,114 @@ export default function NewPortfolioProjectPage() {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
+  const handleSwitchChange = (checked: boolean) => {
+    setFormData((prev) => ({ ...prev, featured: checked }))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user) return
 
+    if (!formData.title || !formData.description) {
+      toast({
+        title: "필수 항목 누락",
+        description: "제목과 설명은 필수 항목입니다.",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
-      let imageUrl = undefined
-
       // 이미지 업로드 처리
+      let imageUrl = undefined
       if (imageFile) {
-        const path = `portfolio/${user.id}/${Date.now()}-${imageFile.name}`
-        imageUrl = await uploadImage(imageFile, path)
+        try {
+          // 실제 환경에서는 이 부분을 활성화
+          // imageUrl = await uploadImage(imageFile, `portfolio/${user.id}/${Date.now()}-${imageFile.name}`);
+
+          // 데모 모드에서는 임시 URL 사용
+          imageUrl = URL.createObjectURL(imageFile)
+        } catch (error) {
+          console.error("Image upload failed:", error)
+          if (isMounted.current) {
+            toast({
+              title: "이미지 업로드 실패",
+              description: "이미지 업로드 중 오류가 발생했습니다. 다시 시도해주세요.",
+              variant: "destructive",
+            })
+            setIsSubmitting(false)
+          }
+          return
+        }
       }
 
-      // 프로젝트 생성
-      await createPortfolioProject({
-        userId: user.id,
+      // 태그 처리
+      const tags = formData.tags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter((tag) => tag)
+
+      // 포트폴리오 프로젝트 생성
+      const now = new Date().toISOString()
+      const newProject = {
         title: formData.title,
         description: formData.description,
-        tags: formData.tags
-          .split(",")
-          .map((tag) => tag.trim())
-          .filter(Boolean),
+        tags,
         projectUrl: formData.projectUrl || undefined,
         githubUrl: formData.githubUrl || undefined,
         imageUrl,
-      })
+        userId: user.id,
+        featured: formData.featured,
+        createdAt: now,
+        updatedAt: now,
+      }
 
-      toast({
-        title: "프로젝트 생성 완료",
-        description: "포트폴리오 프로젝트가 성공적으로 생성되었습니다.",
-      })
+      // 데모 모드에서는 API 호출 시뮬레이션
+      if (process.env.NODE_ENV === "development" || !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+        // 시뮬레이션된 지연
+        await new Promise((resolve) => setTimeout(resolve, 1000))
 
-      router.push("/dashboard/portfolio")
-    } catch (error) {
+        if (isMounted.current) {
+          toast({
+            title: "프로젝트 생성 완료",
+            description: "새 포트폴리오 프로젝트가 성공적으로 생성되었습니다.",
+          })
+
+          router.push("/dashboard/portfolio")
+        }
+        return
+      }
+
+      // 실제 API 호출
+      await createPortfolioProject(newProject)
+
+      if (isMounted.current) {
+        toast({
+          title: "프로젝트 생성 완료",
+          description: "새 포트폴리오 프로젝트가 성공적으로 생성되었습니다.",
+        })
+
+        router.push("/dashboard/portfolio")
+      }
+    } catch (error: any) {
       console.error("Failed to create project:", error)
-      toast({
-        title: "프로젝트 생성 실패",
-        description: "포트폴리오 프로젝트를 생성하는 중 오류가 발생했습니다.",
-        variant: "destructive",
-      })
+      if (isMounted.current) {
+        toast({
+          title: "프로젝트 생성 실패",
+          description: error.message || "포트폴리오 프로젝트를 생성하는 중 오류가 발생했습니다.",
+          variant: "destructive",
+        })
+      }
     } finally {
-      setIsSubmitting(false)
+      if (isMounted.current) {
+        setIsSubmitting(false)
+      }
     }
   }
 
-  if (loading || !user) {
+  if (loading) {
     return (
       <div className="container py-12 flex items-center justify-center">
         <p>로딩 중...</p>
@@ -132,7 +206,7 @@ export default function NewPortfolioProjectPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="title">프로젝트 제목</Label>
+              <Label htmlFor="title">제목</Label>
               <Input
                 id="title"
                 name="title"
@@ -144,7 +218,7 @@ export default function NewPortfolioProjectPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">프로젝트 설명</Label>
+              <Label htmlFor="description">설명</Label>
               <Textarea
                 id="description"
                 name="description"
@@ -224,6 +298,11 @@ export default function NewPortfolioProjectPage() {
                   </Label>
                 </div>
               )}
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch id="featured" checked={formData.featured} onCheckedChange={handleSwitchChange} />
+              <Label htmlFor="featured">주요 프로젝트로 표시</Label>
             </div>
           </CardContent>
           <CardFooter className="flex justify-between">

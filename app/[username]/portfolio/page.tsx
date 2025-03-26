@@ -4,12 +4,12 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Github, ExternalLink } from "lucide-react"
+import type { PortfolioProject } from "@/lib/types"
 
-// 타입 어노테이션을 최소화하고 Next.js의 타입 추론에 의존합니다
-export default async function Page({ params }: any) {
-  const { username } = params
-
+export default async function Page({ params }: { params: { username: string } }) {
   try {
+    const { username } = params
+
     const userProfile = await getUserProfileByUsername(username)
     if (!userProfile) return notFound()
 
@@ -63,7 +63,7 @@ export default async function Page({ params }: any) {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {projects.map((project: any) => (
+              {projects.map((project: PortfolioProject) => (
                 <Card key={project.id} className="overflow-hidden flex flex-col">
                   {project.imageUrl && (
                     <div className="aspect-video w-full overflow-hidden">
@@ -77,14 +77,15 @@ export default async function Page({ params }: any) {
                   <CardHeader>
                     <CardTitle>{project.title}</CardTitle>
                     <CardDescription>
-                      {project.tags.map((tag: string) => (
-                        <span
-                          key={tag}
-                          className="inline-block bg-primary/10 text-primary text-xs rounded-full px-2 py-1 mr-2 mb-2"
-                        >
-                          {tag}
-                        </span>
-                      ))}
+                      {Array.isArray(project.tags) &&
+                        project.tags.map((tag: string) => (
+                          <span
+                            key={tag}
+                            className="inline-block bg-primary/10 text-primary text-xs rounded-full px-2 py-1 mr-2 mb-2"
+                          >
+                            {tag}
+                          </span>
+                        ))}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="flex-grow">

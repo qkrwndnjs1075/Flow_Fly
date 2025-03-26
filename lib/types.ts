@@ -17,13 +17,13 @@ export interface Tag {
 
 // 블로그 포스트 타입 정의
 export interface BlogPost {
-  id: number
+  id: string
   title: string
   slug?: string
   excerpt: string
   content: string
-  date: string
-  author: string
+  date?: string
+  author?: string
   categoryId: string
   image?: string
   tags: string[]
@@ -37,6 +37,7 @@ export interface BlogPost {
   userId: string
 }
 
+// 포트폴리오 프로젝트 타입 정의
 export interface PortfolioProject {
   id: string
   userId: string
@@ -46,10 +47,12 @@ export interface PortfolioProject {
   githubUrl?: string
   tags: string[]
   imageUrl?: string
+  featured?: boolean
   createdAt: string
   updatedAt: string
 }
 
+// 사용자 프로필 타입 정의
 export interface UserProfile {
   id: string
   username: string
@@ -63,5 +66,13 @@ export interface UserProfile {
     twitter?: string
   }
   createdAt: string
+}
+
+// 인증 사용자 타입 정의
+export interface AuthUser {
+  id: string
+  email?: string | null
+  displayName?: string | null
+  photoURL?: string | null
 }
 

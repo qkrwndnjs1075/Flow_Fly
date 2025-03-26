@@ -1,23 +1,18 @@
-"use client";
+"use client"
 
-import type React from "react";
+import type React from "react"
 
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { useState } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import {
   Dialog,
   DialogContent,
@@ -26,7 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@/components/ui/dialog"
 import {
   FileText,
   Briefcase,
@@ -44,10 +39,10 @@ import {
   Github,
   Upload,
   X,
-} from "lucide-react";
-import { useAdminAuth } from "@/lib/admin-auth";
-import { useToast } from "@/hooks/use-toast";
-import { blogPosts } from "@/lib/blog-data";
+} from "lucide-react"
+import { useAdminAuth } from "@/lib/admin-auth"
+import { useToast } from "@/hooks/use-toast"
+import { blogPosts } from "@/lib/blog-data"
 
 // 포트폴리오 프로젝트 데이터 (실제로는 API에서 가져와야 함)
 const portfolioProjects = [
@@ -91,24 +86,24 @@ const portfolioProjects = [
     projectUrl: "https://example.com",
     githubUrl: "https://github.com/username/project",
   },
-];
+]
 
 export default function AdminDashboardPage() {
-  const { adminUser } = useAdminAuth();
-  const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("overview");
+  const { adminUser } = useAdminAuth()
+  const { toast } = useToast()
+  const [activeTab, setActiveTab] = useState("overview")
 
   // 블로그 관리 상태
-  const [posts, setPosts] = useState(blogPosts);
-  const [searchBlogQuery, setSearchBlogQuery] = useState("");
-  const [selectedPost, setSelectedPost] = useState<any>(null);
-  const [isEditingPost, setIsEditingPost] = useState(false);
+  const [posts, setPosts] = useState(blogPosts)
+  const [searchBlogQuery, setSearchBlogQuery] = useState("")
+  const [selectedPost, setSelectedPost] = useState<any>(null)
+  const [isEditingPost, setIsEditingPost] = useState(false)
 
   // 포트폴리오 관리 상태
-  const [projects, setProjects] = useState(portfolioProjects);
-  const [searchProjectQuery, setSearchProjectQuery] = useState("");
-  const [selectedProject, setSelectedProject] = useState<any>(null);
-  const [isEditingProject, setIsEditingProject] = useState(false);
+  const [projects, setProjects] = useState(portfolioProjects)
+  const [searchProjectQuery, setSearchProjectQuery] = useState("")
+  const [selectedProject, setSelectedProject] = useState<any>(null)
+  const [isEditingProject, setIsEditingProject] = useState(false)
 
   // 새 블로그 포스트 상태
   const [newPost, setNewPost] = useState({
@@ -118,7 +113,7 @@ export default function AdminDashboardPage() {
     categoryId: "programming",
     tags: "",
     published: true,
-  });
+  })
 
   // 새 포트폴리오 프로젝트 상태
   const [newProject, setNewProject] = useState({
@@ -128,11 +123,11 @@ export default function AdminDashboardPage() {
     featured: false,
     projectUrl: "",
     githubUrl: "",
-  });
+  })
 
   // 이미지 업로드 상태
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
 
   // 대시보드 통계 데이터 (실제로는 API에서 가져와야 함)
   const stats = {
@@ -140,63 +135,63 @@ export default function AdminDashboardPage() {
     totalProjects: projects.length,
     totalVisitors: 1240,
     todayVisitors: 42,
-  };
+  }
 
   // 검색 기능
   const filteredPosts = posts.filter(
     (post) =>
       post.title.toLowerCase().includes(searchBlogQuery.toLowerCase()) ||
-      post.author.toLowerCase().includes(searchBlogQuery.toLowerCase())
-  );
+      post.author.toLowerCase().includes(searchBlogQuery.toLowerCase()),
+  )
 
   const filteredProjects = projects.filter(
     (project) =>
       project.title.toLowerCase().includes(searchProjectQuery.toLowerCase()) ||
-      project.description.toLowerCase().includes(searchProjectQuery.toLowerCase())
-  );
+      project.description.toLowerCase().includes(searchProjectQuery.toLowerCase()),
+  )
 
   // 이미지 업로드 처리
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const file = e.target.files?.[0]
     if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
+      setImageFile(file)
+      const reader = new FileReader()
       reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+        setImagePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
     }
-  };
+  }
 
   const removeImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
-  };
+    setImageFile(null)
+    setImagePreview(null)
+  }
 
   // 블로그 포스트 관리 함수
   const handleDeletePost = (postId: number) => {
-    setPosts(posts.filter((post) => post.id !== postId));
+    setPosts(posts.filter((post) => post.id !== postId))
     toast({
       title: "게시물 삭제됨",
       description: "블로그 게시물이 성공적으로 삭제되었습니다.",
-    });
-  };
+    })
+  }
 
   const handleTogglePostStatus = (postId: number) => {
-    setPosts(posts.map((post) => (post.id === postId ? { ...post, published: !post.published } : post)));
+    setPosts(posts.map((post) => (post.id === postId ? { ...post, published: !post.published } : post)))
 
-    const post = posts.find((p) => p.id === postId);
+    const post = posts.find((p) => p.id === postId)
     toast({
       title: post?.published ? "게시물 비공개 처리됨" : "게시물 공개 처리됨",
       description: post?.published
         ? "블로그 게시물이 비공개로 설정되었습니다."
         : "블로그 게시물이 공개로 설정되었습니다.",
-    });
-  };
+    })
+  }
 
   const handleAddPost = () => {
-    const newPostId = Math.max(...posts.map((post) => post.id)) + 1;
-    const currentDate = new Date().toISOString().split("T")[0].replace(/-/g, "-");
+    const newPostId = Math.max(...posts.map((post) => post.id)) + 1
+    const currentDate = new Date().toISOString().split("T")[0].replace(/-/g, "-")
 
     const postToAdd = {
       id: newPostId,
@@ -214,9 +209,9 @@ export default function AdminDashboardPage() {
       updatedAt: currentDate,
       published: newPost.published,
       userId: adminUser?.id || "admin-1",
-    };
+    }
 
-    setPosts([postToAdd, ...posts]);
+    setPosts([postToAdd, ...posts])
 
     // 폼 초기화
     setNewPost({
@@ -226,43 +221,43 @@ export default function AdminDashboardPage() {
       categoryId: "programming",
       tags: "",
       published: true,
-    });
+    })
 
-    setImageFile(null);
-    setImagePreview(null);
+    setImageFile(null)
+    setImagePreview(null)
 
     toast({
       title: "게시물 추가됨",
       description: "새 블로그 게시물이 성공적으로 추가되었습니다.",
-    });
-  };
+    })
+  }
 
   // 포트폴리오 프로젝트 관리 함수
   const handleDeleteProject = (projectId: number) => {
-    setProjects(projects.filter((project) => project.id !== projectId));
+    setProjects(projects.filter((project) => project.id !== projectId))
     toast({
       title: "프로젝트 삭제됨",
       description: "포트폴리오 프로젝트가 성공적으로 삭제되었습니다.",
-    });
-  };
+    })
+  }
 
   const handleToggleProjectFeatured = (projectId: number) => {
     setProjects(
-      projects.map((project) => (project.id === projectId ? { ...project, featured: !project.featured } : project))
-    );
+      projects.map((project) => (project.id === projectId ? { ...project, featured: !project.featured } : project)),
+    )
 
-    const project = projects.find((p) => p.id === projectId);
+    const project = projects.find((p) => p.id === projectId)
     toast({
       title: project?.featured ? "주요 프로젝트에서 제거됨" : "주요 프로젝트로 설정됨",
       description: project?.featured
         ? "포트폴리오 프로젝트가 주요 프로젝트에서 제거되었습니다."
         : "포트폴리오 프로젝트가 주요 프로젝트로 설정되었습니다.",
-    });
-  };
+    })
+  }
 
   const handleAddProject = () => {
-    const newProjectId = Math.max(...projects.map((project) => project.id)) + 1;
-    const currentDate = new Date().toISOString().split("T")[0];
+    const newProjectId = Math.max(...projects.map((project) => project.id)) + 1
+    const currentDate = new Date().toISOString().split("T")[0]
 
     const projectToAdd = {
       id: newProjectId,
@@ -271,11 +266,11 @@ export default function AdminDashboardPage() {
       tags: newProject.tags.split(",").map((tag) => tag.trim()),
       featured: newProject.featured,
       createdAt: currentDate,
-      projectUrl: newProject.projectUrl || "", // undefined일 경우 빈 문자열로 기본값 설정
-      githubUrl: newProject.githubUrl || "", // undefined일 경우 빈 문자열로 기본값 설정
-    };
+      projectUrl: newProject.projectUrl || undefined,
+      githubUrl: newProject.githubUrl || undefined,
+    }
 
-    setProjects([projectToAdd, ...projects]);
+    setProjects([projectToAdd, ...projects])
 
     // 폼 초기화
     setNewProject({
@@ -285,16 +280,16 @@ export default function AdminDashboardPage() {
       featured: false,
       projectUrl: "",
       githubUrl: "",
-    });
+    })
 
-    setImageFile(null);
-    setImagePreview(null);
+    setImageFile(null)
+    setImagePreview(null)
 
     toast({
       title: "프로젝트 추가됨",
       description: "새 포트폴리오 프로젝트가 성공적으로 추가되었습니다.",
-    });
-  };
+    })
+  }
 
   return (
     <div className="space-y-6">
@@ -941,5 +936,6 @@ export default function AdminDashboardPage() {
         </TabsContent>
       </Tabs>
     </div>
-  );
+  )
 }
+

@@ -6,11 +6,10 @@ import { ArrowLeft, Calendar } from "lucide-react"
 import Link from "next/link"
 import { format } from "date-fns"
 
-// 타입 어노테이션을 최소화하고 Next.js의 타입 추론에 의존합니다
-export default async function Page({ params }: any) {
-  const { username, slug } = params
-
+export default async function Page({ params }: { params: { username: string; slug: string } }) {
   try {
+    const { username, slug } = params
+
     const userProfile = await getUserProfileByUsername(username)
     if (!userProfile) return notFound()
 
@@ -58,11 +57,12 @@ export default async function Page({ params }: any) {
           </div>
 
           <div className="flex flex-wrap gap-2 mb-8">
-            {post.tags.map((tag: string) => (
-              <span key={tag} className="inline-block bg-primary/10 text-primary text-sm rounded-full px-3 py-1">
-                {tag}
-              </span>
-            ))}
+            {Array.isArray(post.tags) &&
+              post.tags.map((tag: string) => (
+                <span key={tag} className="inline-block bg-primary/10 text-primary text-sm rounded-full px-3 py-1">
+                  {tag}
+                </span>
+              ))}
           </div>
 
           <div className="prose prose-lg dark:prose-invert max-w-none">

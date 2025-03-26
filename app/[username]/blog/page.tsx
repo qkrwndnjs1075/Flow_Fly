@@ -6,12 +6,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Calendar, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { format } from "date-fns"
+import type { BlogPost } from "@/lib/types"
 
-// 타입 어노테이션을 최소화하고 Next.js의 타입 추론에 의존합니다
-export default async function Page({ params }: any) {
-  const { username } = params
-
+export default async function Page({ params }: { params: { username: string } }) {
   try {
+    const { username } = params
+
     const userProfile = await getUserProfileByUsername(username)
     if (!userProfile) return notFound()
 
@@ -42,7 +42,7 @@ export default async function Page({ params }: any) {
             </div>
           ) : (
             <div className="space-y-8">
-              {posts.map((post: any) => (
+              {posts.map((post: BlogPost) => (
                 <Card key={post.id}>
                   <div className="md:flex">
                     {post.coverImageUrl && (
@@ -65,19 +65,20 @@ export default async function Page({ params }: any) {
                       <CardContent className="flex-grow">
                         <p className="text-muted-foreground line-clamp-3">{post.excerpt}</p>
                         <div className="flex flex-wrap gap-2 mt-4">
-                          {post.tags.map((tag: string) => (
-                            <span
-                              key={tag}
-                              className="inline-block bg-primary/10 text-primary text-xs rounded-full px-2 py-1"
-                            >
-                              {tag}
-                            </span>
-                          ))}
+                          {Array.isArray(post.tags) &&
+                            post.tags.map((tag: string) => (
+                              <span
+                                key={tag}
+                                className="inline-block bg-primary/10 text-primary text-xs rounded-full px-2 py-1"
+                              >
+                                {tag}
+                              </span>
+                            ))}
                         </div>
                       </CardContent>
                       <CardFooter>
                         <Button asChild>
-                          <Link href={`/${username}/blog/${post.slug}`}>
+                          <Link href={`/${username}/blog/${post.slug || post.id}`}>
                             자세히 보기
                             <ArrowRight className="ml-2 h-4 w-4" />
                           </Link>
