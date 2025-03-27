@@ -1,14 +1,14 @@
 
-**[ 나만의 포트폴리오&블로그 ]** 
+**[ 나만의 포트폴리오&블로그 ]**  **Plob**
   <br>
-  
-  **Plob**
   <br>
   
   **client : 개발 중**
   <br>
 
   **server : 예정**
+  <br>
+  <br>
 
   **기술 스택: next.js, mongodb, Cloudinary, redis, ts/js**
 
