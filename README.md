@@ -1,5 +1,5 @@
 
-**[ 포트폴리오&블로그 ]** 
+**[ 나만의 포트폴리오&블로그 ]** 
   <br>
   
   **Plob**
@@ -9,6 +9,8 @@
   <br>
 
   **server : 예정**
+
+  **기술 스택: next.js, mongodb, Cloudinary, redis, ts/js**
 
 -> https://plob.parkjoowon.site/
 
