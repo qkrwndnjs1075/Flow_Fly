@@ -6,7 +6,7 @@
   **client : 개발 중**
   <br>
 
-  **server : 예정**
+  **server : 개발 중**
   <br>
   <br>
 
