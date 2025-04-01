@@ -8,13 +8,14 @@ import Link from "next/link"
 import Image from "next/image"
 import { useAuth } from "@/components/auth-context"
 
-export default function Login() {
+export default function Signup() {
+  const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  const { login, googleLogin } = useAuth()
+  const { signup, googleLogin } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -22,11 +23,11 @@ export default function Login() {
     setIsLoading(true)
 
     try {
-      const success = await login(email, password)
+      const success = await signup(name, email, password)
       if (success) {
         router.push("/")
       } else {
-        setError("이메일 또는 비밀번호가 올바르지 않습니다")
+        setError("계정 생성에 실패했습니다")
       }
     } catch (err) {
       setError("오류가 발생했습니다. 다시 시도해주세요.")
@@ -65,11 +66,26 @@ export default function Login() {
       />
 
       <div className="relative z-10 w-full max-w-md p-8 bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl">
-        <h1 className="text-3xl font-bold text-white text-center mb-8">로그인</h1>
+        <h1 className="text-3xl font-bold text-white text-center mb-8">회원가입</h1>
 
         {error && <div className="bg-red-500/20 border border-red-500/50 text-white p-3 rounded-md mb-4">{error}</div>}
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-white mb-1">
+              이름
+            </label>
+            <input
+              id="name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full bg-white/10 border border-white/20 rounded-md px-4 py-2 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="이름을 입력하세요"
+              required
+            />
+          </div>
+
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-white mb-1">
               이메일
@@ -105,7 +121,7 @@ export default function Login() {
             disabled={isLoading}
             className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-md transition-colors font-medium disabled:opacity-70"
           >
-            {isLoading ? "로그인 중..." : "로그인"}
+            {isLoading ? "계정 생성 중..." : "계정 생성"}
           </button>
         </form>
 
@@ -143,16 +159,16 @@ export default function Login() {
                   d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"
                 />
               </svg>
-              <span>Google로 로그인</span>
+              <span>Google로 회원가입</span>
             </button>
           </div>
         </div>
 
         <div className="mt-6 text-center text-white">
           <p>
-            계정이 없으신가요?{" "}
-            <Link href="/signup" className="text-blue-300 hover:underline">
-              회원가입
+            이미 계정이 있으신가요?{" "}
+            <Link href="/login" className="text-blue-300 hover:underline">
+              로그인
             </Link>
           </p>
         </div>
