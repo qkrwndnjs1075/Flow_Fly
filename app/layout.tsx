@@ -9,6 +9,12 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Flow_Fly | 스마트 글래스 OS",
   description: "실시간 성능 추적 기능을 갖춘 스마트 글래스용 고급 e-OS 시스템",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/logo.svg", type: "image/svg+xml" },
+    ],
+  },
 }
 
 export default function RootLayout({

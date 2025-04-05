@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { X, MapPin } from "lucide-react"
-import TimePicker from "./time-picker"
+import TimePickerKeyboard from "./time-picker-keyboard"
 import KakaoMapSearch from "./kakao-map-search"
 
 type EventFormData = {
@@ -73,7 +73,7 @@ export default function CreateEventModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white/20 dark:bg-gray-800/30 backdrop-blur-lg rounded-xl border border-white/20 dark:border-gray-700/30 shadow-xl p-6 w-full max-w-md text-white">
+      <div className="bg-white/20 dark:bg-gray-800/30 backdrop-blur-lg rounded-xl border border-white/20 dark:border-gray-700/30 shadow-xl p-6 w-full max-w-md text-white modal-animation">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">새 일정 만들기</h2>
           <button onClick={onClose} className="text-white/70 hover:text-white">
@@ -115,11 +115,15 @@ export default function CreateEventModal({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block mb-1 text-sm">시작 시간</label>
-                <TimePicker value={formData.startTime} onChange={(time) => handleTimeChange("startTime", time)} />
+                <TimePickerKeyboard
+                  value={formData.startTime}
+                  onChange={(time) => handleTimeChange("startTime", time)}
+                />
+                <p className="text-xs text-white/50 mt-1">직접 입력하거나 화살표로 조정</p>
               </div>
               <div>
                 <label className="block mb-1 text-sm">종료 시간</label>
-                <TimePicker value={formData.endTime} onChange={(time) => handleTimeChange("endTime", time)} />
+                <TimePickerKeyboard value={formData.endTime} onChange={(time) => handleTimeChange("endTime", time)} />
               </div>
             </div>
 
@@ -180,11 +184,14 @@ export default function CreateEventModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-white/10 dark:bg-gray-700/30 hover:bg-white/20 dark:hover:bg-gray-600/30 rounded-md transition-colors"
+              className="px-4 py-2 bg-white/10 dark:bg-gray-700/30 hover:bg-white/20 dark:hover:bg-gray-600/30 rounded-md transition-all hover:translate-y-[-2px]"
             >
               취소
             </button>
-            <button type="submit" className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-md transition-colors">
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-md transition-all hover:translate-y-[-2px] hover:shadow-md"
+            >
               저장
             </button>
           </div>

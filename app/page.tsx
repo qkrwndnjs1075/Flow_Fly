@@ -13,9 +13,6 @@ import {
   MapPin,
   Users,
   Calendar,
-  Pause,
-  Sparkles,
-  X,
   Bell,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -28,10 +25,12 @@ import NotificationsPanel from "@/components/notifications-panel"
 import { useAuth } from "@/components/auth-context"
 
 export default function Home() {
-  const [isLoaded, setIsLoaded] = useState(false)
+  // AI 추천 관련 상태 및 함수 수정
   const [showAIPopup, setShowAIPopup] = useState(false)
   const [typedText, setTypedText] = useState("")
   const [isPlaying, setIsPlaying] = useState(false)
+
+  const [isLoaded, setIsLoaded] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const [notificationCount, setNotificationCount] = useState(3)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -193,33 +192,39 @@ export default function Home() {
     setShowSearchResults(true)
   }
 
+  // 샘플 추천 일정 데이터 추가
+  const upcomingEvents = [
+    {
+      title: "부처님 미팅",
+      startTime: "10:30",
+      endTime: "12:00",
+      color: "bg-pink-500/90",
+    },
+    {
+      title: "제품 데모",
+      startTime: "11:00",
+      endTime: "12:00",
+      color: "bg-purple-500/90",
+    },
+    {
+      title: "고객 프레젠테이션",
+      startTime: "11:00",
+      endTime: "12:30",
+      color: "bg-amber-600/90",
+    },
+  ]
+
+  // AI 팝업 관련 코드 수정
   useEffect(() => {
     setIsLoaded(true)
 
-    // Show AI popup after 3 seconds
-    const popupTimer = setTimeout(() => {
-      setShowAIPopup(true)
-    }, 3000)
+    // AI 팝업 표시 코드 제거
+    // const popupTimer = setTimeout(() => {
+    //   setShowAIPopup(true)
+    // }, 3000)
 
-    return () => clearTimeout(popupTimer)
+    // return () => clearTimeout(popupTimer)
   }, [])
-
-  useEffect(() => {
-    if (showAIPopup) {
-      const text = "오늘은 미팅이 많지 않네요. 집중력을 높이기 위해 한스 짐머의 음악을 틀어드릴까요?"
-      let i = 0
-      const typingInterval = setInterval(() => {
-        if (i < text.length) {
-          setTypedText((prev) => prev + text.charAt(i))
-          i++
-        } else {
-          clearInterval(typingInterval)
-        }
-      }, 50)
-
-      return () => clearInterval(typingInterval)
-    }
-  }, [showAIPopup])
 
   const [currentView, setCurrentView] = useState("week")
   const [selectedEvent, setSelectedEvent] = useState(null)
@@ -543,11 +548,11 @@ export default function Home() {
           <div className="relative">
             <button
               onClick={() => setShowNotifications(!showNotifications)}
-              className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+              className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all hover:scale-110 hover:shadow-md"
             >
               <Bell className="h-5 w-5" />
               {notificationCount > 0 && (
-                <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center notification-badge">
                   {notificationCount}
                 </span>
               )}
@@ -565,9 +570,18 @@ export default function Home() {
           {/* 테마 토글 */}
           <ThemeToggle />
 
-          <Settings className="h-6 w-6 text-white drop-shadow-md cursor-pointer" onClick={goToSettings} />
-          <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold shadow-md">
-            U
+          <Settings
+            className="h-6 w-6 text-white drop-shadow-md cursor-pointer transition-transform hover:scale-110"
+            onClick={goToSettings}
+          />
+          <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold shadow-md cursor-pointer">
+            {user?.photoUrl ? (
+              <div className="relative w-full h-full overflow-hidden rounded-full">
+                <Image src={user.photoUrl || "/placeholder.svg"} alt="User avatar" fill className="object-cover" />
+              </div>
+            ) : (
+              "U"
+            )}
           </div>
         </div>
       </header>
@@ -579,7 +593,9 @@ export default function Home() {
           className={`h-full bg-white/10 dark:bg-gray-800/30 backdrop-blur-lg p-4 shadow-xl border-r border-white/20 dark:border-gray-700/30 rounded-tr-3xl opacity-0 ${
             isLoaded ? "animate-fade-in" : ""
           } flex flex-col justify-between transition-all duration-300 ease-in-out ${
-            sidebarCollapsed ? "w-0 p-0 opacity-0" : "w-64 opacity-100"
+            sidebarCollapsed
+              ? "w-0 p-0 opacity-0 transform -translate-x-16"
+              : "w-64 opacity-100 transform translate-x-0"
           }`}
           style={{ animationDelay: "0.4s" }}
         >
@@ -588,7 +604,7 @@ export default function Home() {
               <div>
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="mb-6 flex items-center justify-center gap-2 rounded-full bg-blue-500 px-4 py-3 text-white w-full"
+                  className="mb-6 flex items-center justify-center gap-2 rounded-full bg-blue-500 px-4 py-3 text-white w-full transition-all hover:bg-blue-600 hover:shadow-lg hover:translate-y-[-2px]"
                 >
                   <Plus className="h-5 w-5" />
                   <span>생성</span>
@@ -618,8 +634,10 @@ export default function Home() {
                     {miniCalendarDays.map((day, i) => (
                       <div
                         key={i}
-                        className={`text-xs rounded-full w-7 h-7 flex items-center justify-center ${
-                          day === selectedDay ? "bg-blue-500 text-white" : "text-white hover:bg-white/20"
+                        className={`text-xs rounded-full w-7 h-7 flex items-center justify-center transition-all ${
+                          day === selectedDay
+                            ? "bg-blue-500 text-white transform scale-110"
+                            : "text-white hover:bg-white/20"
                         } ${!day ? "invisible" : ""} cursor-pointer`}
                         onClick={() => handleDateClick(day)}
                       >
@@ -788,11 +806,12 @@ export default function Home() {
                           return (
                             <div
                               key={i}
-                              className={`absolute ${event.color} rounded-md p-2 text-white text-xs shadow-md cursor-pointer transition-all duration-200 ease-in-out hover:translate-y-[-2px] hover:shadow-lg`}
+                              className={`absolute ${event.color} rounded-md p-2 text-white text-xs shadow-md cursor-pointer transition-all duration-300 ease-in-out hover:translate-y-[-3px] hover:shadow-lg event-appear`}
                               style={{
                                 ...eventStyle,
                                 left: "4px",
                                 right: "4px",
+                                animationDelay: `${i * 0.05}s`,
                               }}
                               onClick={() => handleEventClick(event)}
                             >
@@ -824,55 +843,11 @@ export default function Home() {
         </div>
 
         {/* AI Popup */}
-        {showAIPopup && (
-          <div className="fixed bottom-8 right-8 z-20">
-            <div className="w-[450px] relative bg-gradient-to-br from-blue-400/30 via-blue-500/30 to-blue-600/30 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-blue-300/30 text-white">
-              <button
-                onClick={() => setShowAIPopup(false)}
-                className="absolute top-2 right-2 text-white/70 hover:text-white transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </button>
-              <div className="flex gap-3">
-                <div className="flex-shrink-0">
-                  <Sparkles className="h-5 w-5 text-blue-300" />
-                </div>
-                <div className="min-h-[80px]">
-                  <p className="text-base font-light">{typedText}</p>
-                </div>
-              </div>
-              <div className="mt-6 flex gap-3">
-                <button
-                  onClick={togglePlay}
-                  className="flex-1 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-sm transition-colors font-medium"
-                >
-                  예
-                </button>
-                <button
-                  onClick={() => setShowAIPopup(false)}
-                  className="flex-1 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-sm transition-colors font-medium"
-                >
-                  아니오
-                </button>
-              </div>
-              {isPlaying && (
-                <div className="mt-4 flex items-center justify-between">
-                  <button
-                    className="flex items-center justify-center gap-2 rounded-xl bg-white/10 px-4 py-2.5 text-white text-sm hover:bg-white/20 transition-colors"
-                    onClick={togglePlay}
-                  >
-                    <Pause className="h-4 w-4" />
-                    <span>한스 짐머 일시정지</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+        {/* AI 추천 팝업 컴포넌트 제거 */}
 
         {selectedEvent && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className={`${selectedEvent.color} p-6 rounded-lg shadow-xl max-w-md w-full mx-4`}>
+            <div className={`${selectedEvent.color} p-6 rounded-lg shadow-xl max-w-md w-full mx-4 modal-animation`}>
               <h3 className="text-2xl font-bold mb-4 text-white">{selectedEvent.title}</h3>
               <div className="space-y-3 text-white">
                 <p className="flex items-center">

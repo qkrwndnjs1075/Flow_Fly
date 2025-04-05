@@ -5,13 +5,13 @@ import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import { ChevronUp, ChevronDown } from "lucide-react"
 
-type TimePickerProps = {
+type TimePickerKeyboardProps = {
   value: string
   onChange: (time: string) => void
   className?: string
 }
 
-export default function TimePicker({ value, onChange, className = "" }: TimePickerProps) {
+export default function TimePickerKeyboard({ value, onChange, className = "" }: TimePickerKeyboardProps) {
   // 시간 파싱 함수
   const parseTime = (timeString: string) => {
     const [hourStr, minuteStr] = timeString.split(":")
@@ -37,6 +37,10 @@ export default function TimePicker({ value, onChange, className = "" }: TimePick
   const [minutes, setMinutes] = useState<number>(initialTime.minute)
   const [period, setPeriod] = useState<"AM" | "PM">(initialTime.period)
 
+  // 입력 상태
+  const [hourInput, setHourInput] = useState<string>(initialTime.hour.toString().padStart(2, "0"))
+  const [minuteInput, setMinuteInput] = useState<string>(initialTime.minute.toString().padStart(2, "0"))
+
   // 입력 필드 참조
   const hourInputRef = useRef<HTMLInputElement>(null)
   const minuteInputRef = useRef<HTMLInputElement>(null)
@@ -47,6 +51,8 @@ export default function TimePicker({ value, onChange, className = "" }: TimePick
     setHours(hour)
     setMinutes(minute)
     setPeriod(period)
+    setHourInput(hour.toString().padStart(2, "0"))
+    setMinuteInput(minute.toString().padStart(2, "0"))
   }, [value])
 
   // 시간 포맷팅 및 변경 함수
@@ -69,6 +75,7 @@ export default function TimePicker({ value, onChange, className = "" }: TimePick
   const incrementHour = () => {
     setHours((prev) => {
       const newHours = prev === 12 ? 1 : prev + 1
+      setHourInput(newHours.toString().padStart(2, "0"))
       return newHours
     })
   }
@@ -76,6 +83,7 @@ export default function TimePicker({ value, onChange, className = "" }: TimePick
   const decrementHour = () => {
     setHours((prev) => {
       const newHours = prev === 1 ? 12 : prev - 1
+      setHourInput(newHours.toString().padStart(2, "0"))
       return newHours
     })
   }
@@ -83,6 +91,7 @@ export default function TimePicker({ value, onChange, className = "" }: TimePick
   const incrementMinute = () => {
     setMinutes((prev) => {
       const newMinutes = prev === 59 ? 0 : prev + 1
+      setMinuteInput(newMinutes.toString().padStart(2, "0"))
       return newMinutes
     })
   }
@@ -90,6 +99,7 @@ export default function TimePicker({ value, onChange, className = "" }: TimePick
   const decrementMinute = () => {
     setMinutes((prev) => {
       const newMinutes = prev === 0 ? 59 : prev - 1
+      setMinuteInput(newMinutes.toString().padStart(2, "0"))
       return newMinutes
     })
   }
@@ -103,28 +113,56 @@ export default function TimePicker({ value, onChange, className = "" }: TimePick
     formatAndNotifyChange()
   }, [hours, minutes, period])
 
-  // 시간 입력 핸들러 수정
+  // 시간 입력 핸들러
   const handleHourChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
+    setHourInput(value)
+
     // 숫자만 입력 가능하도록
-    if (/^\d*$/.test(value)) {
-      const numValue = value === "" ? 0 : Number.parseInt(value)
-      if (numValue >= 0 && numValue <= 12) {
-        setHours(numValue || 0)
+    if (/^\d{1,2}$/.test(value)) {
+      const numValue = Number.parseInt(value)
+      if (numValue >= 1 && numValue <= 12) {
+        setHours(numValue)
       }
     }
   }
 
-  // 분 입력 핸들러 수정
+  // 시간 입력 완료 핸들러
+  const handleHourBlur = () => {
+    let numValue = Number.parseInt(hourInput)
+    if (isNaN(numValue) || numValue < 1) {
+      numValue = 1
+    } else if (numValue > 12) {
+      numValue = 12
+    }
+    setHours(numValue)
+    setHourInput(numValue.toString().padStart(2, "0"))
+  }
+
+  // 분 입력 핸들러
   const handleMinuteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
+    setMinuteInput(value)
+
     // 숫자만 입력 가능하도록
-    if (/^\d*$/.test(value)) {
-      const numValue = value === "" ? 0 : Number.parseInt(value)
+    if (/^\d{1,2}$/.test(value)) {
+      const numValue = Number.parseInt(value)
       if (numValue >= 0 && numValue <= 59) {
-        setMinutes(numValue || 0)
+        setMinutes(numValue)
       }
     }
+  }
+
+  // 분 입력 완료 핸들러
+  const handleMinuteBlur = () => {
+    let numValue = Number.parseInt(minuteInput)
+    if (isNaN(numValue)) {
+      numValue = 0
+    } else if (numValue > 59) {
+      numValue = 59
+    }
+    setMinutes(numValue)
+    setMinuteInput(numValue.toString().padStart(2, "0"))
   }
 
   // 키보드 이벤트 핸들러
@@ -135,6 +173,10 @@ export default function TimePicker({ value, onChange, className = "" }: TimePick
     } else if (e.key === "ArrowDown") {
       e.preventDefault()
       decrementHour()
+    } else if (e.key === "Tab" && !e.shiftKey) {
+      e.preventDefault()
+      minuteInputRef.current?.focus()
+      minuteInputRef.current?.select()
     }
   }
 
@@ -145,50 +187,80 @@ export default function TimePicker({ value, onChange, className = "" }: TimePick
     } else if (e.key === "ArrowDown") {
       e.preventDefault()
       decrementMinute()
+    } else if (e.key === "Tab" && e.shiftKey) {
+      e.preventDefault()
+      hourInputRef.current?.focus()
+      hourInputRef.current?.select()
     }
   }
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
       <div className="flex flex-col items-center">
-        <button type="button" onClick={incrementHour} className="p-1 hover:bg-white/10 rounded-md">
-          <ChevronUp className="h-4 w-4 text-white" />
+        <button
+          type="button"
+          onClick={incrementHour}
+          className="p-1 hover:bg-white/10 rounded-md text-white"
+          aria-label="시간 증가"
+        >
+          <ChevronUp className="h-4 w-4" />
         </button>
         <div className="w-10 h-10 flex items-center justify-center bg-white/10 rounded-md text-white relative">
           <input
             ref={hourInputRef}
             type="text"
-            value={hours.toString().padStart(2, "0")}
+            value={hourInput}
             onChange={handleHourChange}
+            onBlur={handleHourBlur}
             onKeyDown={handleHourKeyDown}
             className="w-full h-full bg-transparent text-center focus:outline-none"
             maxLength={2}
+            aria-label="시간"
+            onClick={(e) => (e.target as HTMLInputElement).select()}
           />
         </div>
-        <button type="button" onClick={decrementHour} className="p-1 hover:bg-white/10 rounded-md">
-          <ChevronDown className="h-4 w-4 text-white" />
+        <button
+          type="button"
+          onClick={decrementHour}
+          className="p-1 hover:bg-white/10 rounded-md text-white"
+          aria-label="시간 감소"
+        >
+          <ChevronDown className="h-4 w-4" />
         </button>
       </div>
 
       <div className="text-white text-xl">:</div>
 
       <div className="flex flex-col items-center">
-        <button type="button" onClick={incrementMinute} className="p-1 hover:bg-white/10 rounded-md">
-          <ChevronUp className="h-4 w-4 text-white" />
+        <button
+          type="button"
+          onClick={incrementMinute}
+          className="p-1 hover:bg-white/10 rounded-md text-white"
+          aria-label="분 증가"
+        >
+          <ChevronUp className="h-4 w-4" />
         </button>
         <div className="w-10 h-10 flex items-center justify-center bg-white/10 rounded-md text-white relative">
           <input
             ref={minuteInputRef}
             type="text"
-            value={minutes.toString().padStart(2, "0")}
+            value={minuteInput}
             onChange={handleMinuteChange}
+            onBlur={handleMinuteBlur}
             onKeyDown={handleMinuteKeyDown}
             className="w-full h-full bg-transparent text-center focus:outline-none"
             maxLength={2}
+            aria-label="분"
+            onClick={(e) => (e.target as HTMLInputElement).select()}
           />
         </div>
-        <button type="button" onClick={decrementMinute} className="p-1 hover:bg-white/10 rounded-md">
-          <ChevronDown className="h-4 w-4 text-white" />
+        <button
+          type="button"
+          onClick={decrementMinute}
+          className="p-1 hover:bg-white/10 rounded-md text-white"
+          aria-label="분 감소"
+        >
+          <ChevronDown className="h-4 w-4" />
         </button>
       </div>
 
@@ -196,6 +268,7 @@ export default function TimePicker({ value, onChange, className = "" }: TimePick
         type="button"
         onClick={togglePeriod}
         className="w-12 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-md text-white transition-colors"
+        aria-label="오전/오후 전환"
       >
         {period}
       </button>

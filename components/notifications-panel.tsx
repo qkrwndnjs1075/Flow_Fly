@@ -28,7 +28,7 @@ export default function NotificationsPanel({
   if (!isOpen) return null
 
   return (
-    <div className="fixed right-4 top-20 w-80 bg-white/20 dark:bg-gray-800/80 backdrop-blur-lg rounded-xl border border-white/20 dark:border-gray-700/50 shadow-xl z-50 overflow-hidden">
+    <div className="fixed right-4 top-20 w-80 bg-white/20 dark:bg-gray-800/80 backdrop-blur-lg rounded-xl border border-white/20 dark:border-gray-700/50 shadow-xl z-50 overflow-hidden animate-slide-in-right">
       <div className="flex items-center justify-between p-4 border-b border-white/20 dark:border-gray-700/50">
         <h3 className="font-medium text-white">알림</h3>
         <div className="flex items-center gap-2">
@@ -48,12 +48,13 @@ export default function NotificationsPanel({
             <p>알림 없음</p>
           </div>
         ) : (
-          notifications.map((notification) => (
+          notifications.map((notification, i) => (
             <div
               key={notification.id}
-              className={`p-4 border-b border-white/10 dark:border-gray-700/30 hover:bg-white/10 dark:hover:bg-gray-700/30 cursor-pointer ${
+              className={`p-4 border-b border-white/10 dark:border-gray-700/30 hover:bg-white/10 dark:hover:bg-gray-700/30 cursor-pointer transition-all ${
                 notification.read ? "opacity-70" : ""
-              }`}
+              } animate-slide-in-up`}
+              style={{ animationDelay: `${i * 0.05}s` }}
               onClick={() => onMarkAsRead(notification.id)}
             >
               <div className="flex items-start gap-3">

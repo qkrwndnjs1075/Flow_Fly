@@ -37,7 +37,7 @@ export default function AddCalendarModal({ isOpen, onClose, onSave }: AddCalenda
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl p-6 w-full max-w-md text-white">
+      <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl p-6 w-full max-w-md text-white modal-animation">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">새 캘린더 추가</h2>
           <button onClick={onClose} className="text-white/70 hover:text-white">
@@ -85,11 +85,14 @@ export default function AddCalendarModal({ isOpen, onClose, onSave }: AddCalenda
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-md transition-colors"
+              className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-md transition-all hover:translate-y-[-2px]"
             >
               취소
             </button>
-            <button type="submit" className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-md transition-colors">
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-md transition-all hover:translate-y-[-2px] hover:shadow-md"
+            >
               캘린더 추가
             </button>
           </div>

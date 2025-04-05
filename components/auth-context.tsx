@@ -17,6 +17,7 @@ type AuthContextType = {
   googleLogin: () => Promise<boolean>
   logout: () => void
   isLoading: boolean
+  updateUserProfile: (data: { name?: string; photoUrl?: string }) => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -43,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         name: email.split("@")[0],
         email,
         provider: "email",
+        photoUrl: "/placeholder.svg?height=100&width=100",
       }
       setUser(mockUser)
       localStorage.setItem("user", JSON.stringify(mockUser))
@@ -60,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         name,
         email,
         provider: "email",
+        photoUrl: "/placeholder.svg?height=100&width=100",
       }
       setUser(mockUser)
       localStorage.setItem("user", JSON.stringify(mockUser))
@@ -89,13 +92,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const updateUserProfile = (data: { name?: string; photoUrl?: string }) => {
+    if (user) {
+      const updatedUser = { ...user, ...data }
+      setUser(updatedUser)
+      localStorage.setItem("user", JSON.stringify(updatedUser))
+    }
+  }
+
   const logout = () => {
     setUser(null)
     localStorage.removeItem("user")
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, googleLogin, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, signup, googleLogin, logout, isLoading, updateUserProfile }}>
       {children}
     </AuthContext.Provider>
   )
