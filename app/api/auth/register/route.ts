@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     const name = formData.get("name") as string;
     const imageFile = formData.get("image") as File;
 
-    // 입력값 검증
+   
     if (!email || !password || !name || !imageFile) {
       return NextResponse.json({ message: "Email, password, name, and image are required" }, { status: 400 });
     }
