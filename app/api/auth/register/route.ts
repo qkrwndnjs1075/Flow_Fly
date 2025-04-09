@@ -8,7 +8,7 @@ export async function POST(req: Request) {
   await dbConnect();
 
   try {
-    // FormData로 데이터 받기
+    
     const formData = await req.formData();
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
@@ -26,14 +26,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "User already exists" }, { status: 400 });
     }
 
-    // 이미지 업로드 (user 폴더에 저장)
+    
     const imageUrl = await uploadImage(imageFile, `${email}_profile`, "user");
 
-    // 비밀번호 해싱
+    
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = new User({ email, password: hashedPassword, name, imageUrl });
 
-    // 사용자 저장
+    
     await user.save();
     return NextResponse.json({ message: "User created successfully" }, { status: 201 });
   } catch (error) {

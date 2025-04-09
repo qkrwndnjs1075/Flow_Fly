@@ -12,10 +12,13 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "images.unsplash.com",
-        port: "", // 기본 포트 사용
-        pathname: "/**", // 모든 경로 허용
+        port: "",
+        pathname: "/**",
       },
     ],
+  },
+  env: {
+    MONGODB_URI: process.env.MONGODB_URI,
   },
 };
 
