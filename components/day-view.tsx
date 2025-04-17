@@ -74,4 +74,3 @@ export default function DayView({ events, currentDate, selectedDay, handleEventC
     </div>
   )
 }
-

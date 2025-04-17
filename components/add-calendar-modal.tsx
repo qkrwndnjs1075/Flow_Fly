@@ -101,4 +101,3 @@ export default function AddCalendarModal({ isOpen, onClose, onSave }: AddCalenda
     </div>
   )
 }
-

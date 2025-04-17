@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "5mb", // ✅ 올바른 위치
+    },
+  },
   typescript: {
     ignoreBuildErrors: true,
   },

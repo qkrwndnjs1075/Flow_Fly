@@ -139,4 +139,3 @@ export default function ProfilePictureUpload({ currentPhotoUrl, onPhotoChange }:
     </div>
   )
 }
-

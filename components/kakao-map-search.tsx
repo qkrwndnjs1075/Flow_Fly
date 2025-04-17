@@ -1,34 +1,34 @@
-"use client";
+"use client"
 
-import type React from "react";
+import type React from "react"
 
-import { useState, useEffect, useRef } from "react";
-import { Search, MapPin, X } from "lucide-react";
+import { useState, useEffect, useRef } from "react"
+import { Search, MapPin, X } from "lucide-react"
 
 declare global {
   interface Window {
-    kakao: any;
+    kakao: any
   }
 }
 
 type KakaoMapSearchProps = {
-  onSelectLocation: (location: { address: string; placeName?: string }) => void;
-  onClose: () => void;
-};
+  onSelectLocation: (location: { address: string; placeName?: string }) => void
+  onClose: () => void
+}
 
 export default function KakaoMapSearch({ onSelectLocation, onClose }: KakaoMapSearchProps) {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [map, setMap] = useState<any>(null);
-  const [markers, setMarkers] = useState<any[]>([]);
+  const mapRef = useRef<HTMLDivElement>(null)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [searchResults, setSearchResults] = useState<any[]>([])
+  const [map, setMap] = useState<any>(null)
+  const [markers, setMarkers] = useState<any[]>([])
 
   // 카카오맵 스크립트 로드
   useEffect(() => {
-    const script = document.createElement("script");
-    script.async = true;
-    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=6a48322dfa726c2787faec174e2b39ae&libraries=services&autoload=false`;
-    document.head.appendChild(script);
+    const script = document.createElement("script")
+    script.async = true
+    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=6a48322dfa726c2787faec174e2b39ae&libraries=services&autoload=false`
+    document.head.appendChild(script)
 
     script.onload = () => {
       window.kakao.maps.load(() => {
@@ -36,76 +36,76 @@ export default function KakaoMapSearch({ onSelectLocation, onClose }: KakaoMapSe
           const options = {
             center: new window.kakao.maps.LatLng(37.566826, 126.9786567), // 서울 시청
             level: 3,
-          };
-          const mapInstance = new window.kakao.maps.Map(mapRef.current, options);
-          setMap(mapInstance);
+          }
+          const mapInstance = new window.kakao.maps.Map(mapRef.current, options)
+          setMap(mapInstance)
         }
-      });
-    };
+      })
+    }
 
     return () => {
-      document.head.removeChild(script);
-    };
-  }, []);
+      document.head.removeChild(script)
+    }
+  }, [])
 
   // 장소 검색
   const searchPlaces = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery.trim() || !map) return;
+    e.preventDefault()
+    if (!searchQuery.trim() || !map) return
 
-    const places = new window.kakao.maps.services.Places();
+    const places = new window.kakao.maps.services.Places()
 
     places.keywordSearch(searchQuery, (result: any, status: any) => {
       if (status === window.kakao.maps.services.Status.OK) {
-        setSearchResults(result);
+        setSearchResults(result)
 
         // 기존 마커 제거
-        markers.forEach((marker) => marker.setMap(null));
+        markers.forEach((marker) => marker.setMap(null))
 
         // 새 마커 생성
-        const bounds = new window.kakao.maps.LatLngBounds();
+        const bounds = new window.kakao.maps.LatLngBounds()
         const newMarkers = result.map((place: any) => {
-          const position = new window.kakao.maps.LatLng(place.y, place.x);
+          const position = new window.kakao.maps.LatLng(place.y, place.x)
           const marker = new window.kakao.maps.Marker({
             map: map,
             position: position,
-          });
+          })
 
           // 인포윈도우 생성
           const infowindow = new window.kakao.maps.InfoWindow({
             content: `<div style="padding:5px;font-size:12px;">${place.place_name}</div>`,
-          });
+          })
 
           // 마커에 마우스오버 이벤트 등록
           window.kakao.maps.event.addListener(marker, "mouseover", () => {
-            infowindow.open(map, marker);
-          });
+            infowindow.open(map, marker)
+          })
 
           // 마커에 마우스아웃 이벤트 등록
           window.kakao.maps.event.addListener(marker, "mouseout", () => {
-            infowindow.close();
-          });
+            infowindow.close()
+          })
 
-          bounds.extend(position);
-          return marker;
-        });
+          bounds.extend(position)
+          return marker
+        })
 
-        setMarkers(newMarkers);
-        map.setBounds(bounds);
+        setMarkers(newMarkers)
+        map.setBounds(bounds)
       } else {
-        setSearchResults([]);
+        setSearchResults([])
       }
-    });
-  };
+    })
+  }
 
   // 장소 선택
   const handleSelectPlace = (place: any) => {
     onSelectLocation({
       address: place.address_name || place.road_address_name,
       placeName: place.place_name,
-    });
-    onClose();
-  };
+    })
+    onClose()
+  }
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -170,5 +170,5 @@ export default function KakaoMapSearch({ onSelectLocation, onClose }: KakaoMapSe
         <div className="mt-4 text-xs text-white/50">* 카카오맵 API를 사용하여 위치 정보를 제공합니다.</div>
       </div>
     </div>
-  );
+  )
 }
