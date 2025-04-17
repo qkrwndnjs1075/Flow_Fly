@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { useSession, signIn, signOut } from "next-auth/react"
 
 type User = {
   id: string
@@ -13,100 +14,180 @@ type User = {
 type AuthContextType = {
   user: User
   login: (email: string, password: string) => Promise<boolean>
-  signup: (name: string, email: string, password: string) => Promise<boolean>
+  signup: (name: string, email: string, password: string, verificationCode: string) => Promise<boolean>
   googleLogin: () => Promise<boolean>
   logout: () => void
   isLoading: boolean
-  updateUserProfile: (data: { name?: string; photoUrl?: string }) => void
+  updateUserProfile: (data: { name?: string; photoUrl?: string }) => Promise<boolean>
+  verifyEmail: (email: string) => Promise<{ success: boolean; verificationCode?: string }>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
+
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const { data: session, status } = useSession()
   const [user, setUser] = useState<User>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // 로컬 스토리지에서 사용자 정보 가져오기
-    const storedUser = localStorage.getItem("user")
-    if (storedUser) {
-      setUser(JSON.parse(storedUser))
+    if (status === "authenticated" && session?.user) {
+      setUser({
+        id: session.user.id as string,
+        name: session.user.name || "",
+        email: session.user.email || "",
+        photoUrl: session.user.image || undefined,
+        provider: session.user.email?.includes("gmail.com") ? "google" : "email", // 간단한 추측, 실제로는 세션에서 provider 정보를 받아오는 것이 좋음
+      })
+      setIsLoading(false)
+    } else if (status === "unauthenticated") {
+      setUser(null)
+      setIsLoading(false)
     }
-    setIsLoading(false)
-  }, [])
+  }, [session, status])
 
   const login = async (email: string, password: string) => {
-    // MVP에서는 간단한 검증만 수행
-    if (email && password) {
-      // 실제 앱에서는 API 호출로 대체
-      const mockUser = {
-        id: "user-" + Math.random().toString(36).substr(2, 9),
-        name: email.split("@")[0],
-        email,
-        provider: "email",
-        photoUrl: "/placeholder.svg?height=100&width=100",
-      }
-      setUser(mockUser)
-      localStorage.setItem("user", JSON.stringify(mockUser))
-      return true
-    }
-    return false
-  }
-
-  const signup = async (name: string, email: string, password: string) => {
-    // MVP에서는 간단한 검증만 수행
-    if (name && email && password) {
-      // 실제 앱에서는 API 호출로 대체
-      const mockUser = {
-        id: "user-" + Math.random().toString(36).substr(2, 9),
-        name,
-        email,
-        provider: "email",
-        photoUrl: "/placeholder.svg?height=100&width=100",
-      }
-      setUser(mockUser)
-      localStorage.setItem("user", JSON.stringify(mockUser))
-      return true
-    }
-    return false
-  }
-
-  const googleLogin = async () => {
     try {
-      // 실제 앱에서는 Google OAuth API를 사용하여 인증
-      // MVP에서는 간단히 모의 사용자 생성
-      const mockGoogleUser = {
-        id: "google-" + Math.random().toString(36).substr(2, 9),
-        name: "Google User",
-        email: "user@gmail.com",
-        photoUrl: "https://lh3.googleusercontent.com/a/default-user",
-        provider: "google",
-      }
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      })
 
-      setUser(mockGoogleUser)
-      localStorage.setItem("user", JSON.stringify(mockGoogleUser))
-      return true
+      return result?.ok || false
     } catch (error) {
-      console.error("Google login failed:", error)
+      console.error("Login error:", error)
       return false
     }
   }
 
-  const updateUserProfile = (data: { name?: string; photoUrl?: string }) => {
-    if (user) {
-      const updatedUser = { ...user, ...data }
-      setUser(updatedUser)
-      localStorage.setItem("user", JSON.stringify(updatedUser))
+  const signup = async (name: string, email: string, password: string, verificationCode: string) => {
+    try {
+      setIsLoading(true)
+      const response = await fetch(`${API_URL}/auth/signup`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, email, password, verificationCode }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        // 회원가입 후 자동 로그인
+        const loginResult = await login(email, password)
+        return loginResult
+      }
+      return false
+    } catch (error) {
+      console.error("Signup error:", error)
+      return false
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const logout = () => {
+  const verifyEmail = async (email: string) => {
+    try {
+      const response = await fetch(`${API_URL}/auth/verify-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      })
+
+      const data = await response.json()
+      return {
+        success: response.ok && data.success,
+        verificationCode: data.verificationCode,
+      }
+    } catch (error) {
+      console.error("Email verification error:", error)
+      return { success: false }
+    }
+  }
+
+  const googleLogin = async () => {
+    try {
+      const result = await signIn("google", { redirect: false })
+      return result?.ok || false
+    } catch (error) {
+      console.error("Google login error:", error)
+      return false
+    }
+  }
+
+  const updateUserProfile = async (data: { name?: string; photoUrl?: string }) => {
+    if (!user || !session?.accessToken) return false
+
+    try {
+      setIsLoading(true)
+
+      // 이름 업데이트
+      if (data.name) {
+        const response = await fetch(`${API_URL}/users/profile`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+          body: JSON.stringify({ name: data.name }),
+        })
+
+        if (!response.ok) {
+          throw new Error("이름 업데이트 실패")
+        }
+      }
+
+      // 프로필 사진 업데이트 (base64 문자열인 경우)
+      if (data.photoUrl && data.photoUrl.startsWith("data:image")) {
+        // base64 문자열을 Blob으로 변환
+        const response = await fetch(data.photoUrl)
+        const blob = await response.blob()
+
+        // FormData 생성
+        const formData = new FormData()
+        formData.append("photo", blob, "profile.jpg")
+
+        const uploadResponse = await fetch(`${API_URL}/users/profile-photo`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+          body: formData,
+        })
+
+        if (!uploadResponse.ok) {
+          throw new Error("프로필 사진 업로드 실패")
+        }
+
+        const uploadData = await uploadResponse.json()
+        data.photoUrl = uploadData.photoUrl
+      }
+
+      // 사용자 상태 업데이트
+      setUser((prev) => (prev ? { ...prev, ...data } : null))
+      return true
+    } catch (error) {
+      console.error("프로필 업데이트 오류:", error)
+      return false
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const logout = async () => {
+    await signOut({ redirect: true, callbackUrl: "/login" })
     setUser(null)
-    localStorage.removeItem("user")
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, googleLogin, logout, isLoading, updateUserProfile }}>
+    <AuthContext.Provider
+      value={{ user, login, signup, googleLogin, logout, isLoading, updateUserProfile, verifyEmail }}
+    >
       {children}
     </AuthContext.Provider>
   )

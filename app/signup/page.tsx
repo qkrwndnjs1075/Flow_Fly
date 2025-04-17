@@ -17,7 +17,7 @@ export default function Signup() {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  const { signup } = useAuth()
+  const { signup, verifyEmail } = useAuth()
 
   // 이메일 인증 관련 상태
   const [isEmailSent, setIsEmailSent] = useState(false)
@@ -52,7 +52,7 @@ export default function Signup() {
   }, [countdown])
 
   // 이메일 인증 코드 발송 함수
-  const sendVerificationEmail = () => {
+  const sendVerificationEmail = async () => {
     if (!email) {
       setError("이메일을 입력해주세요.")
       return
@@ -65,18 +65,22 @@ export default function Signup() {
 
     setIsLoading(true)
 
-    // MVP에서는 실제 이메일을 보내지 않고 모의 인증 코드 생성
-    const mockCode = Math.floor(100000 + Math.random() * 900000).toString()
-    setVerificationCode(mockCode)
+    try {
+      const result = await verifyEmail(email)
 
-    // 실제 앱에서는 서버에 요청하여 이메일 발송
-    setTimeout(() => {
-      setIsEmailSent(true)
+      if (result.success && result.verificationCode) {
+        setVerificationCode(result.verificationCode)
+        setIsEmailSent(true)
+        setCountdown(180) // 3분 타이머
+        setError("")
+      } else {
+        setError("이메일 인증 코드 발송에 실패했습니다.")
+      }
+    } catch (err) {
+      setError("오류가 발생했습니다. 다시 시도해주세요.")
+    } finally {
       setIsLoading(false)
-      setCountdown(180) // 3분 타이머
-      console.log("인증 코드:", mockCode) // 개발용 콘솔 출력
-      setError("")
-    }, 1500)
+    }
   }
 
   // 인증 코드 확인 함수
@@ -117,7 +121,7 @@ export default function Signup() {
     setIsLoading(true)
 
     try {
-      const success = await signup(name, email, password)
+      const success = await signup(name, email, password, verificationCode)
       if (success) {
         router.push("/")
       } else {
