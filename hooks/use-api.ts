@@ -21,7 +21,7 @@ export function useApi() {
   const fetchApi = async <T,>(
     endpoint: string,
     { requiresAuth = true, method = "GET", body = undefined, formData = undefined }: ApiOptions = {},
-  ) => {
+  ): Promise<{ data?: T; error?: string; status: number; success: boolean }> => {
     setIsLoading(true)
 
     try {

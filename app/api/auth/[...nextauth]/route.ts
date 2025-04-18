@@ -20,9 +20,7 @@ export const authOptions = {
         try {
           const response = await fetch(`${API_URL}/auth/login`, {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               email: credentials?.email,
               password: credentials?.password,
@@ -38,6 +36,7 @@ export const authOptions = {
               email: data.user.email,
               image: data.user.photoUrl,
               token: data.token,
+              provider: "credentials",
             }
           }
           return null
@@ -49,19 +48,24 @@ export const authOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user, account }: any) {
-      if (account && account.provider === "google") {
+    async jwt({ token, user, account, profile }) {
+      // 초기 로그인 시 user 객체가 있음
+      if (user) {
+        token.id = user.id
+        token.accessToken = user.token
+        token.provider = user.provider || account?.provider || "credentials"
+      }
+
+      // Google 로그인 시 백엔드에 사용자 정보 전달
+      if (account?.provider === "google" && profile?.email) {
         try {
-          // 구글 로그인 정보를 백엔드에 전달
           const response = await fetch(`${API_URL}/auth/google`, {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              name: user.name,
-              email: user.email,
-              photoUrl: user.image,
+              name: profile.name,
+              email: profile.email,
+              photoUrl: profile.picture,
             }),
           })
 
@@ -70,22 +74,21 @@ export const authOptions = {
           if (response.ok && data.success) {
             token.id = data.user.id
             token.accessToken = data.token
+            token.provider = "google"
           }
         } catch (error) {
           console.error("Google auth error:", error)
         }
       }
 
-      if (user) {
-        token.id = user.id
-        token.accessToken = user.token
-      }
-
       return token
     },
-    async session({ session, token }: any) {
-      session.user.id = token.id
-      session.accessToken = token.accessToken
+    async session({ session, token }) {
+      if (token) {
+        session.user.id = token.id
+        session.user.provider = token.provider
+        session.accessToken = token.accessToken
+      }
       return session
     },
   },
@@ -95,7 +98,9 @@ export const authOptions = {
   },
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30일
   },
+  secret: process.env.NEXTAUTH_SECRET || "your-secret-key",
 }
 
 const handler = NextAuth(authOptions)

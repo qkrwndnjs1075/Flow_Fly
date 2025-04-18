@@ -1,8 +1,9 @@
 import express from "express"
+import type { Router } from "express"
 import { getUserSettings, updateUserSettings } from "../controllers/settingsController"
 import { auth } from "../middleware/auth"
 
-const router = express.Router()
+const router: Router = express.Router()
 
 // 모든 라우트에 인증 미들웨어 적용
 router.use(auth)

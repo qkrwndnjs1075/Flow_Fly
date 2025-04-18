@@ -4,6 +4,13 @@ import { useState, useEffect, useCallback } from "react"
 import { useApi } from "./use-api"
 import type { Notification } from "@/lib/api-services"
 
+interface NotificationResponse {
+  success: boolean
+  notifications: Notification[]
+  notification?: Notification
+  message?: string
+}
+
 export function useNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
@@ -16,7 +23,7 @@ export function useNotifications() {
     setError(null)
 
     try {
-      const response = await fetchApi<{ success: boolean; notifications: Notification[] }>("notifications")
+      const response = await fetchApi<NotificationResponse>("notifications")
 
       if (response.success && response.data?.notifications) {
         setNotifications(response.data.notifications)
@@ -41,7 +48,7 @@ export function useNotifications() {
 
   const markAsRead = async (id: string) => {
     try {
-      const response = await fetchApi<{ success: boolean; notification: Notification }>(`notifications/${id}/read`, {
+      const response = await fetchApi<NotificationResponse>(`notifications/${id}/read`, {
         method: "PUT",
       })
 
@@ -58,7 +65,7 @@ export function useNotifications() {
 
   const markAllAsRead = async () => {
     try {
-      const response = await fetchApi<{ success: boolean; message: string }>("notifications/read-all", {
+      const response = await fetchApi<NotificationResponse>("notifications/read-all", {
         method: "PUT",
       })
 
@@ -75,7 +82,7 @@ export function useNotifications() {
 
   const deleteNotification = async (id: string) => {
     try {
-      const response = await fetchApi<{ success: boolean; message: string }>(`notifications/${id}`, {
+      const response = await fetchApi<NotificationResponse>(`notifications/${id}`, {
         method: "DELETE",
       })
 
@@ -95,7 +102,7 @@ export function useNotifications() {
 
   const deleteAllNotifications = async () => {
     try {
-      const response = await fetchApi<{ success: boolean; message: string }>("notifications", {
+      const response = await fetchApi<NotificationResponse>("notifications", {
         method: "DELETE",
       })
 

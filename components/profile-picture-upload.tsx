@@ -7,11 +7,11 @@ import { Upload, X, Camera } from "lucide-react"
 import Image from "next/image"
 
 type ProfilePictureUploadProps = {
-  currentPhotoUrl?: string
-  onPhotoChange: (photoUrl: string) => void
+  photoUrl?: string
+  onChange: (photoUrl: string) => void
 }
 
-export default function ProfilePictureUpload({ currentPhotoUrl, onPhotoChange }: ProfilePictureUploadProps) {
+export default function ProfilePictureUpload({ photoUrl, onChange }: ProfilePictureUploadProps) {
   const [preview, setPreview] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -38,7 +38,7 @@ export default function ProfilePictureUpload({ currentPhotoUrl, onPhotoChange }:
     reader.onload = (e) => {
       const result = e.target?.result as string
       setPreview(result)
-      onPhotoChange(result) // 상위 컴포넌트에 URL 전달
+      onChange(result) // 상위 컴포넌트에 URL 전달
     }
     reader.readAsDataURL(file)
   }
@@ -81,10 +81,10 @@ export default function ProfilePictureUpload({ currentPhotoUrl, onPhotoChange }:
     if (fileInputRef.current) {
       fileInputRef.current.value = ""
     }
-    onPhotoChange("/placeholder.svg?height=100&width=100") // 기본 이미지로 리셋
+    onChange("/placeholder.svg?height=100&width=100") // 기본 이미지로 리셋
   }
 
-  const displayUrl = preview || currentPhotoUrl || "/placeholder.svg?height=100&width=100"
+  const displayUrl = preview || photoUrl || "/placeholder.svg?height=100&width=100"
 
   return (
     <div className="flex flex-col items-center">

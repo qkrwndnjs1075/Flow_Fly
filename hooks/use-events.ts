@@ -10,6 +10,14 @@ interface UseEventsProps {
   day?: number
 }
 
+interface EventResponse {
+  success: boolean
+  events: Event[]
+  event?: Event
+  message?: string
+  results?: Event[]
+}
+
 export function useEvents({ year, month, day }: UseEventsProps = {}) {
   const [events, setEvents] = useState<Event[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -30,7 +38,7 @@ export function useEvents({ year, month, day }: UseEventsProps = {}) {
 
     try {
       const queryParams = buildQueryParams()
-      const response = await fetchApi<{ success: boolean; events: Event[] }>(`events${queryParams}`)
+      const response = await fetchApi<EventResponse>(`events${queryParams}`)
 
       if (response.success && response.data?.events) {
         setEvents(response.data.events)
@@ -50,7 +58,7 @@ export function useEvents({ year, month, day }: UseEventsProps = {}) {
 
   const addEvent = async (eventData: Omit<Event, "_id" | "user" | "createdAt" | "updatedAt">) => {
     try {
-      const response = await fetchApi<{ success: boolean; event: Event }>("events", {
+      const response = await fetchApi<EventResponse>("events", {
         method: "POST",
         body: eventData,
       })
@@ -67,13 +75,13 @@ export function useEvents({ year, month, day }: UseEventsProps = {}) {
 
   const updateEvent = async (id: string, eventData: Partial<Event>) => {
     try {
-      const response = await fetchApi<{ success: boolean; event: Event }>(`events/${id}`, {
+      const response = await fetchApi<EventResponse>(`events/${id}`, {
         method: "PUT",
         body: eventData,
       })
 
       if (response.success && response.data?.event) {
-        setEvents(events.map((event) => (event._id === id ? response.data.event : event)))
+        setEvents(events.map((event) => (event._id === id ? response.data!.event! : event)))
         return true
       }
       return false
@@ -84,7 +92,7 @@ export function useEvents({ year, month, day }: UseEventsProps = {}) {
 
   const deleteEvent = async (id: string) => {
     try {
-      const response = await fetchApi<{ success: boolean; message: string }>(`events/${id}`, {
+      const response = await fetchApi<EventResponse>(`events/${id}`, {
         method: "DELETE",
       })
 
@@ -100,9 +108,7 @@ export function useEvents({ year, month, day }: UseEventsProps = {}) {
 
   const searchEvents = async (query: string) => {
     try {
-      const response = await fetchApi<{ success: boolean; results: Event[] }>(
-        `search/events?query=${encodeURIComponent(query)}`,
-      )
+      const response = await fetchApi<EventResponse>(`search/events?query=${encodeURIComponent(query)}`)
 
       if (response.success) {
         return response.data?.results || []

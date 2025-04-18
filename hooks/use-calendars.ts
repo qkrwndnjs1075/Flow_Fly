@@ -4,6 +4,13 @@ import { useState, useEffect, useCallback } from "react"
 import { useApi } from "./use-api"
 import type { Calendar } from "@/lib/api-services"
 
+interface CalendarResponse {
+  success: boolean
+  calendars: Calendar[]
+  calendar?: Calendar
+  message?: string
+}
+
 export function useCalendars() {
   const [calendars, setCalendars] = useState<Calendar[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -15,7 +22,7 @@ export function useCalendars() {
     setError(null)
 
     try {
-      const response = await fetchApi<{ success: boolean; calendars: Calendar[] }>("calendars")
+      const response = await fetchApi<CalendarResponse>("calendars")
 
       if (response.success && response.data?.calendars) {
         setCalendars(response.data.calendars)
@@ -35,7 +42,7 @@ export function useCalendars() {
 
   const addCalendar = async (name: string, color: string) => {
     try {
-      const response = await fetchApi<{ success: boolean; calendar: Calendar }>("calendars", {
+      const response = await fetchApi<CalendarResponse>("calendars", {
         method: "POST",
         body: { name, color },
       })
@@ -52,13 +59,13 @@ export function useCalendars() {
 
   const updateCalendar = async (id: string, name: string, color: string) => {
     try {
-      const response = await fetchApi<{ success: boolean; calendar: Calendar }>(`calendars/${id}`, {
+      const response = await fetchApi<CalendarResponse>(`calendars/${id}`, {
         method: "PUT",
         body: { name, color },
       })
 
       if (response.success && response.data?.calendar) {
-        setCalendars(calendars.map((cal) => (cal._id === id ? response.data.calendar : cal)))
+        setCalendars(calendars.map((cal) => (cal._id === id ? response.data!.calendar! : cal)))
         return true
       }
       return false
@@ -69,7 +76,7 @@ export function useCalendars() {
 
   const deleteCalendar = async (id: string) => {
     try {
-      const response = await fetchApi<{ success: boolean; message: string }>(`calendars/${id}`, {
+      const response = await fetchApi<CalendarResponse>(`calendars/${id}`, {
         method: "DELETE",
       })
 

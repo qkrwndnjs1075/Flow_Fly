@@ -42,6 +42,12 @@ interface KakaoMapAddress {
   } | null
 }
 
+interface KakaoMapResponse {
+  success: boolean
+  places?: KakaoMapPlace[]
+  addresses?: KakaoMapAddress[]
+}
+
 export function useKakaoMap() {
   const [isLoading, setIsLoading] = useState(false)
   const { fetchApi } = useApi()
@@ -49,10 +55,9 @@ export function useKakaoMap() {
   const searchPlaces = async (query: string): Promise<KakaoMapPlace[]> => {
     setIsLoading(true)
     try {
-      const response = await fetchApi<{ success: boolean; places: KakaoMapPlace[] }>(
-        `kakao-map/places?query=${encodeURIComponent(query)}`,
-        { requiresAuth: true },
-      )
+      const response = await fetchApi<KakaoMapResponse>(`kakao-map/places?query=${encodeURIComponent(query)}`, {
+        requiresAuth: true,
+      })
 
       if (response.success && response.data?.places) {
         return response.data.places
@@ -69,10 +74,9 @@ export function useKakaoMap() {
   const searchAddress = async (query: string): Promise<KakaoMapAddress[]> => {
     setIsLoading(true)
     try {
-      const response = await fetchApi<{ success: boolean; addresses: KakaoMapAddress[] }>(
-        `kakao-map/address?query=${encodeURIComponent(query)}`,
-        { requiresAuth: true },
-      )
+      const response = await fetchApi<KakaoMapResponse>(`kakao-map/address?query=${encodeURIComponent(query)}`, {
+        requiresAuth: true,
+      })
 
       if (response.success && response.data?.addresses) {
         return response.data.addresses

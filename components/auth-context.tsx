@@ -2,6 +2,8 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { useSession, signIn, signOut } from "next-auth/react"
+import { useRouter } from "next/navigation"
+import { apiClient } from "@/lib/api-client"
 
 type User = {
   id: string
@@ -11,12 +13,26 @@ type User = {
   provider?: string
 } | null
 
+interface AuthResponse {
+  success: boolean
+  token?: string
+  user?: {
+    id: string
+    name: string
+    email: string
+    photoUrl?: string
+    provider?: string
+  }
+  message?: string
+  verificationCode?: string
+}
+
 type AuthContextType = {
   user: User
   login: (email: string, password: string) => Promise<boolean>
   signup: (name: string, email: string, password: string, verificationCode: string) => Promise<boolean>
   googleLogin: () => Promise<boolean>
-  logout: () => void
+  logout: () => Promise<void>
   isLoading: boolean
   updateUserProfile: (data: { name?: string; photoUrl?: string }) => Promise<boolean>
   verifyEmail: (email: string) => Promise<{ success: boolean; verificationCode?: string }>
@@ -24,13 +40,13 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { data: session, status } = useSession()
   const [user, setUser] = useState<User>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter()
 
+  // 세션 상태에 따라 사용자 정보 업데이트
   useEffect(() => {
     if (status === "authenticated" && session?.user) {
       setUser({
@@ -38,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         name: session.user.name || "",
         email: session.user.email || "",
         photoUrl: session.user.image || undefined,
-        provider: session.user.email?.includes("gmail.com") ? "google" : "email", // 간단한 추측, 실제로는 세션에서 provider 정보를 받아오는 것이 좋음
+        provider: (session.user.provider as string) || "credentials",
       })
       setIsLoading(false)
     } else if (status === "unauthenticated") {
@@ -47,6 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [session, status])
 
+  // 이메일/비밀번호 로그인
   const login = async (email: string, password: string) => {
     try {
       const result = await signIn("credentials", {
@@ -54,7 +71,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password,
         redirect: false,
       })
-
       return result?.ok || false
     } catch (error) {
       console.error("Login error:", error)
@@ -62,23 +78,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  // 회원가입
   const signup = async (name: string, email: string, password: string, verificationCode: string) => {
     try {
       setIsLoading(true)
-      const response = await fetch(`${API_URL}/auth/signup`, {
+
+      const data = await apiClient<AuthResponse>("auth/signup", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name, email, password, verificationCode }),
+        body: { name, email, password, verificationCode },
       })
 
-      const data = await response.json()
-
-      if (response.ok && data.success) {
+      if (data.success) {
         // 회원가입 후 자동 로그인
-        const loginResult = await login(email, password)
-        return loginResult
+        return await login(email, password)
       }
       return false
     } catch (error) {
@@ -89,19 +101,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  // 이메일 인증 코드 발송
   const verifyEmail = async (email: string) => {
     try {
-      const response = await fetch(`${API_URL}/auth/verify-email`, {
+      const data = await apiClient<AuthResponse>("auth/verify-email", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email }),
+        body: { email },
       })
 
-      const data = await response.json()
       return {
-        success: response.ok && data.success,
+        success: true,
         verificationCode: data.verificationCode,
       }
     } catch (error) {
@@ -110,6 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  // 구글 로그인
   const googleLogin = async () => {
     try {
       const result = await signIn("google", { redirect: false })
@@ -120,6 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  // 사용자 프로필 업데이트
   const updateUserProfile = async (data: { name?: string; photoUrl?: string }) => {
     if (!user || !session?.accessToken) return false
 
@@ -128,18 +139,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // 이름 업데이트
       if (data.name) {
-        const response = await fetch(`${API_URL}/users/profile`, {
+        await apiClient<AuthResponse>("users/profile", {
+          token: session.accessToken as string,
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.accessToken}`,
-          },
-          body: JSON.stringify({ name: data.name }),
+          body: { name: data.name },
         })
-
-        if (!response.ok) {
-          throw new Error("이름 업데이트 실패")
-        }
       }
 
       // 프로필 사진 업데이트 (base64 문자열인 경우)
@@ -152,19 +156,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const formData = new FormData()
         formData.append("photo", blob, "profile.jpg")
 
-        const uploadResponse = await fetch(`${API_URL}/users/profile-photo`, {
+        const uploadData = await apiClient<{ success: boolean; photoUrl: string }>("users/profile-photo", {
+          token: session.accessToken as string,
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${session.accessToken}`,
-          },
-          body: formData,
+          formData,
         })
 
-        if (!uploadResponse.ok) {
-          throw new Error("프로필 사진 업로드 실패")
-        }
-
-        const uploadData = await uploadResponse.json()
         data.photoUrl = uploadData.photoUrl
       }
 
@@ -179,9 +176,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  // 로그아웃
   const logout = async () => {
-    await signOut({ redirect: true, callbackUrl: "/login" })
+    await signOut({ redirect: false })
     setUser(null)
+    router.push("/login")
   }
 
   return (
