@@ -1,5 +1,14 @@
-declare module "express" {
-  import * as e from "express-serve-static-core"
+import type * as express from "express-serve-static-core"
 
-  export = e
+declare global {
+  namespace Express {
+    // 기존 Request 인터페이스 확장
+    interface Request {
+      user?: any
+    }
+  }
+}
+
+declare module "express" {
+  export interface Router extends express.Router {}
 }

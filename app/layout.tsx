@@ -1,11 +1,11 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import "./globals.css"
-import { AuthProvider } from "@/components/auth-context"
-import NextAuthProvider from "@/components/providers/session-provider"
+import type React from "react";
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import { AuthProvider } from "@/components/auth-context";
+import NextAuthProvider from "@/components/session-provider";
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Flow_Fly | 스마트 글래스 OS",
@@ -16,12 +16,12 @@ export const metadata: Metadata = {
       { url: "/logo.svg", type: "image/svg+xml" },
     ],
   },
-}
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
     <html lang="ko">
@@ -32,5 +32,5 @@ export default function RootLayout({
         </NextAuthProvider>
       </body>
     </html>
-  )
+  );
 }

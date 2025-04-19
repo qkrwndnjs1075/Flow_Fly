@@ -17,6 +17,7 @@ interface JwtPayload {
   exp: number
 }
 
+// RequestHandler 타입으로 명시적 정의
 export const auth = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const token = req.header("Authorization")?.replace("Bearer ", "")
