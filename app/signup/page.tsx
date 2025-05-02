@@ -1,38 +1,38 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import Image from "next/image"
-import { useAuth } from "@/components/auth-context"
-import { Mail, Lock, User, Check, ArrowRight } from "lucide-react"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
+import { useAuth } from "@/components/auth-context";
+import { Mail, Lock, User, Check, ArrowRight } from "lucide-react";
 
 export default function Signup() {
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
-  const { signup, verifyEmail } = useAuth()
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const { signup, verifyEmail } = useAuth();
 
   // 이메일 인증 관련 상태
-  const [isEmailSent, setIsEmailSent] = useState(false)
-  const [verificationCode, setVerificationCode] = useState("")
-  const [userInputCode, setUserInputCode] = useState("")
-  const [isVerified, setIsVerified] = useState(false)
-  const [verificationError, setVerificationError] = useState("")
-  const [countdown, setCountdown] = useState(0)
+  const [isEmailSent, setIsEmailSent] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [userInputCode, setUserInputCode] = useState("");
+  const [isVerified, setIsVerified] = useState(false);
+  const [verificationError, setVerificationError] = useState("");
+  const [countdown, setCountdown] = useState(0);
 
   // 비밀번호 유효성 검사
   const [passwordValid, setPasswordValid] = useState({
     length: false,
     hasNumber: false,
     hasSpecial: false,
-  })
+  });
 
   // 비밀번호 유효성 검사 함수
   useEffect(() => {
@@ -40,106 +40,111 @@ export default function Signup() {
       length: password.length >= 8,
       hasNumber: /\d/.test(password),
       hasSpecial: /[!@#$%^&*(),.?":{}|<>]/.test(password),
-    })
-  }, [password])
+    });
+  }, [password]);
 
   // 카운트다운 타이머
   useEffect(() => {
     if (countdown > 0) {
-      const timer = setTimeout(() => setCountdown(countdown - 1), 1000)
-      return () => clearTimeout(timer)
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
     }
-  }, [countdown])
+  }, [countdown]);
 
-  // 이메일 인증 코드 발송 함수
   const sendVerificationEmail = async () => {
     if (!email) {
-      setError("이메일을 입력해주세요.")
-      return
+      setError("이메일을 입력해주세요.");
+      return;
     }
 
     if (!/\S+@\S+\.\S+/.test(email)) {
-      setError("유효한 이메일 주소를 입력해주세요.")
-      return
+      setError("유효한 이메일 주소를 입력해주세요.");
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
-      const result = await verifyEmail(email)
+      const result = await verifyEmail(email);
 
-      if (result.success && result.verificationCode) {
-        setVerificationCode(result.verificationCode)
-        setIsEmailSent(true)
-        setCountdown(180) // 3분 타이머
-        setError("")
+      if (result.success) {
+        setIsEmailSent(true);
+        setCountdown(180); // 3분 타이머
+        setError("");
+
+        // 개발 환경에서만 코드 자동 설정
+        if (result.verificationCode) {
+          setVerificationCode(result.verificationCode);
+          setUserInputCode(result.verificationCode);
+        }
       } else {
-        setError("이메일 인증 코드 발송에 실패했습니다.")
+        setError(result.message || "이메일 인증 코드 발송에 실패했습니다.");
       }
-    } catch (err) {
-      setError("오류가 발생했습니다. 다시 시도해주세요.")
+    } catch (err: any) {
+      setError("오류가 발생했습니다. 다시 시도해주세요.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // 인증 코드 확인 함수
   const verifyCode = () => {
     if (userInputCode === verificationCode) {
-      setIsVerified(true)
-      setVerificationError("")
+      setIsVerified(true);
+      setVerificationError("");
     } else {
-      setVerificationError("인증 코드가 일치하지 않습니다.")
+      setVerificationError("인증 코드가 일치하지 않습니다.");
     }
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
+    e.preventDefault();
+    setError("");
 
     // 유효성 검사
     if (!name || !email || !password || !confirmPassword) {
-      setError("모든 필드를 입력해주세요.")
-      return
+      setError("모든 필드를 입력해주세요.");
+      return;
     }
 
     if (!isVerified) {
-      setError("이메일 인증을 완료해주세요.")
-      return
+      setError("이메일 인증을 완료해주세요.");
+      return;
     }
 
     if (password !== confirmPassword) {
-      setError("비밀번호가 일치하지 않습니다.")
-      return
+      setError("비밀번호가 일치하지 않습니다.");
+      return;
     }
 
     if (!passwordValid.length || !passwordValid.hasNumber || !passwordValid.hasSpecial) {
-      setError("비밀번호 요구사항을 충족해주세요.")
-      return
+      setError("비밀번호 요구사항을 충족해주세요.");
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
-      const success = await signup(name, email, password, verificationCode)
+      // verificationCode를 회원가입 함수에 전달
+      const success = await signup(name, email, password, verificationCode);
       if (success) {
-        router.push("/")
+        router.push("/");
       } else {
-        setError("계정 생성에 실패했습니다")
+        setError("계정 생성에 실패했습니다");
       }
     } catch (err) {
-      setError("오류가 발생했습니다. 다시 시도해주세요.")
+      setError("오류가 발생했습니다. 다시 시도해주세요.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // 타이머 포맷팅 함수
   const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins}:${secs < 10 ? "0" : ""}${secs}`
-  }
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+  };
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden flex items-center justify-center">
@@ -327,5 +332,5 @@ export default function Signup() {
         </div>
       </div>
     </div>
-  )
+  );
 }

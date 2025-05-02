@@ -1,50 +1,50 @@
-"use client"
+"use client";
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
-import { useSession, signIn, signOut } from "next-auth/react"
-import { useRouter } from "next/navigation"
-import { apiClient } from "@/lib/api-client"
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { useSession, signIn, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { apiClient } from "@/lib/api-client";
 
 type User = {
-  id: string
-  name: string
-  email: string
-  photoUrl?: string
-  provider?: string
-} | null
+  id: string;
+  name: string;
+  email: string;
+  photoUrl?: string;
+  provider?: string;
+} | null;
 
 interface AuthResponse {
-  success: boolean
-  token?: string
+  success: boolean;
+  token?: string;
   user?: {
-    id: string
-    name: string
-    email: string
-    photoUrl?: string
-    provider?: string
-  }
-  message?: string
-  verificationCode?: string
+    id: string;
+    name: string;
+    email: string;
+    photoUrl?: string;
+    provider?: string;
+  };
+  message?: string;
+  verificationCode?: string;
 }
 
 type AuthContextType = {
-  user: User
-  login: (email: string, password: string) => Promise<boolean>
-  signup: (name: string, email: string, password: string, verificationCode: string) => Promise<boolean>
-  googleLogin: () => Promise<boolean>
-  logout: () => Promise<void>
-  isLoading: boolean
-  updateUserProfile: (data: { name?: string; photoUrl?: string }) => Promise<boolean>
-  verifyEmail: (email: string) => Promise<{ success: boolean; verificationCode?: string }>
-}
+  user: User;
+  login: (email: string, password: string) => Promise<boolean>;
+  signup: (name: string, email: string, password: string, verificationCode: string) => Promise<boolean>;
+  googleLogin: () => Promise<boolean>;
+  logout: () => Promise<void>;
+  isLoading: boolean;
+  updateUserProfile: (data: { name?: string; photoUrl?: string }) => Promise<boolean>;
+  verifyEmail: (email: string) => Promise<{ success: boolean; verificationCode?: string }>;
+};
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { data: session, status } = useSession()
-  const [user, setUser] = useState<User>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const router = useRouter()
+  const { data: session, status } = useSession();
+  const [user, setUser] = useState<User>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   // 세션 상태에 따라 사용자 정보 업데이트
   useEffect(() => {
@@ -55,13 +55,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: session.user.email || "",
         photoUrl: session.user.image || undefined,
         provider: (session.user.provider as string) || "credentials",
-      })
-      setIsLoading(false)
+      });
+      setIsLoading(false);
     } else if (status === "unauthenticated") {
-      setUser(null)
-      setIsLoading(false)
+      setUser(null);
+      setIsLoading(false);
     }
-  }, [session, status])
+  }, [session, status]);
 
   // 이메일/비밀번호 로그인
   const login = async (email: string, password: string) => {
@@ -70,36 +70,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email,
         password,
         redirect: false,
-      })
-      return result?.ok || false
+      });
+      return result?.ok || false;
     } catch (error) {
-      console.error("Login error:", error)
-      return false
+      console.error("Login error:", error);
+      return false;
     }
-  }
+  };
 
   // 회원가입
   const signup = async (name: string, email: string, password: string, verificationCode: string) => {
     try {
-      setIsLoading(true)
+      setIsLoading(true);
 
       const data = await apiClient<AuthResponse>("auth/signup", {
         method: "POST",
         body: { name, email, password, verificationCode },
-      })
+      });
 
       if (data.success) {
         // 회원가입 후 자동 로그인
-        return await login(email, password)
+        return await login(email, password);
       }
-      return false
+      return false;
     } catch (error) {
-      console.error("Signup error:", error)
-      return false
+      console.error("Signup error:", error);
+      return false;
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // 이메일 인증 코드 발송
   const verifyEmail = async (email: string) => {
@@ -107,35 +107,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await apiClient<AuthResponse>("auth/verify-email", {
         method: "POST",
         body: { email },
-      })
+      });
 
-      return {
-        success: true,
-        verificationCode: data.verificationCode,
+      if (data.success) {
+        return {
+          success: true,
+          message: data.message,
+          verificationCode: data.verificationCode, // 개발 환경에서만 전송됨
+        };
+      } else {
+        return {
+          success: false,
+          message: data.message || "이메일 인증 코드 발송에 실패했습니다.",
+        };
       }
-    } catch (error) {
-      console.error("Email verification error:", error)
-      return { success: false }
+    } catch (err: any) {
+      console.error("Email verification error:", err);
+      return {
+        success: false,
+        message: err.message || "서버 오류가 발생했습니다. 나중에 다시 시도해주세요.",
+      };
     }
-  }
-
+  };
   // 구글 로그인
   const googleLogin = async () => {
     try {
-      const result = await signIn("google", { redirect: false })
-      return result?.ok || false
+      const result = await signIn("google", { redirect: false });
+      return result?.ok || false;
     } catch (error) {
-      console.error("Google login error:", error)
-      return false
+      console.error("Google login error:", error);
+      return false;
     }
-  }
+  };
 
   // 사용자 프로필 업데이트
   const updateUserProfile = async (data: { name?: string; photoUrl?: string }) => {
-    if (!user || !session?.accessToken) return false
+    if (!user || !session?.accessToken) return false;
 
     try {
-      setIsLoading(true)
+      setIsLoading(true);
 
       // 이름 업데이트
       if (data.name) {
@@ -143,45 +153,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           token: session.accessToken as string,
           method: "PUT",
           body: { name: data.name },
-        })
+        });
       }
 
       // 프로필 사진 업데이트 (base64 문자열인 경우)
       if (data.photoUrl && data.photoUrl.startsWith("data:image")) {
         // base64 문자열을 Blob으로 변환
-        const response = await fetch(data.photoUrl)
-        const blob = await response.blob()
+        const response = await fetch(data.photoUrl);
+        const blob = await response.blob();
 
         // FormData 생성
-        const formData = new FormData()
-        formData.append("photo", blob, "profile.jpg")
+        const formData = new FormData();
+        formData.append("photo", blob, "profile.jpg");
 
         const uploadData = await apiClient<{ success: boolean; photoUrl: string }>("users/profile-photo", {
           token: session.accessToken as string,
           method: "POST",
           formData,
-        })
+        });
 
-        data.photoUrl = uploadData.photoUrl
+        data.photoUrl = uploadData.photoUrl;
       }
 
       // 사용자 상태 업데이트
-      setUser((prev) => (prev ? { ...prev, ...data } : null))
-      return true
+      setUser((prev) => (prev ? { ...prev, ...data } : null));
+      return true;
     } catch (error) {
-      console.error("프로필 업데이트 오류:", error)
-      return false
+      console.error("프로필 업데이트 오류:", error);
+      return false;
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // 로그아웃
   const logout = async () => {
-    await signOut({ redirect: false })
-    setUser(null)
-    router.push("/login")
-  }
+    await signOut({ redirect: false });
+    setUser(null);
+    router.push("/login");
+  };
 
   return (
     <AuthContext.Provider
@@ -189,13 +199,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     >
       {children}
     </AuthContext.Provider>
-  )
+  );
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext)
+  const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider")
+    throw new Error("useAuth must be used within an AuthProvider");
   }
-  return context
+  return context;
 }
