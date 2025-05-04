@@ -2,30 +2,42 @@
 
 import type React from "react"
 
-import { useState, useRef } from "react"
-import { Upload, X, Camera } from "lucide-react"
+import { useState, useRef, useEffect } from "react"
 import Image from "next/image"
+import { Camera, Upload, X } from "lucide-react"
 
-type ProfilePictureUploadProps = {
-  photoUrl?: string
-  onChange: (photoUrl: string) => void
+interface ProfilePictureUploadProps {
+  initialPhotoUrl?: string
+  onPhotoChange: (photoUrl: string, file?: File) => void
+  size?: "sm" | "md" | "lg"
 }
 
-export default function ProfilePictureUpload({ photoUrl, onChange }: ProfilePictureUploadProps) {
-  const [preview, setPreview] = useState<string | null>(null)
-  const [isDragging, setIsDragging] = useState(false)
+export default function ProfilePictureUpload({
+  initialPhotoUrl,
+  onPhotoChange,
+  size = "md",
+}: ProfilePictureUploadProps) {
+  const [photoUrl, setPhotoUrl] = useState<string>(initialPhotoUrl || "/images/default-profile.png")
+  const [isHovering, setIsHovering] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // 이미지 처리 함수
-  const processFile = (file: File) => {
-    if (!file) return
-
-    // 허용된 파일 타입인지 확인
-    const validTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"]
-    if (!validTypes.includes(file.type)) {
-      alert("JPG, PNG, GIF, WEBP 형식의 이미지만 업로드 가능합니다.")
-      return
+  // 초기 사진 URL 업데이트
+  useEffect(() => {
+    if (initialPhotoUrl) {
+      setPhotoUrl(initialPhotoUrl)
     }
+  }, [initialPhotoUrl])
+
+  // 사이즈에 따른 크기 설정
+  const sizeClasses = {
+    sm: "w-16 h-16",
+    md: "w-24 h-24",
+    lg: "w-32 h-32",
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
 
     // 파일 크기 제한 (5MB)
     if (file.size > 5 * 1024 * 1024) {
@@ -33,109 +45,85 @@ export default function ProfilePictureUpload({ photoUrl, onChange }: ProfilePict
       return
     }
 
-    // 이미지 미리보기 생성
+    // 이미지 파일 타입 확인
+    if (!file.type.startsWith("image/")) {
+      alert("이미지 파일만 업로드 가능합니다.")
+      return
+    }
+
     const reader = new FileReader()
-    reader.onload = (e) => {
-      const result = e.target?.result as string
-      setPreview(result)
-      onChange(result) // 상위 컴포넌트에 URL 전달
+    reader.onload = (event) => {
+      const newPhotoUrl = event.target?.result as string
+      setPhotoUrl(newPhotoUrl)
+      onPhotoChange(newPhotoUrl, file)
     }
     reader.readAsDataURL(file)
   }
 
-  // 파일 선택 처리
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      processFile(file)
-    }
-  }
-
-  // 드래그 앤 드롭 처리
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(true)
-  }
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-  }
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-
-    const file = e.dataTransfer.files?.[0]
-    if (file) {
-      processFile(file)
-    }
-  }
-
-  const triggerFileInput = () => {
-    fileInputRef.current?.click()
-  }
-
-  const clearImage = () => {
-    setPreview(null)
+  const handleRemovePhoto = () => {
+    const defaultPhoto = "/images/default-profile.png"
+    setPhotoUrl(defaultPhoto)
+    onPhotoChange(defaultPhoto)
     if (fileInputRef.current) {
       fileInputRef.current.value = ""
     }
-    onChange("/placeholder.svg?height=100&width=100") // 기본 이미지로 리셋
   }
-
-  const displayUrl = preview || photoUrl || "/placeholder.svg?height=100&width=100"
 
   return (
     <div className="flex flex-col items-center">
-      <div className="relative mb-4">
-        <div className="w-32 h-32 rounded-full overflow-hidden relative shadow-lg">
-          <Image src={displayUrl || "/placeholder.svg"} alt="Profile" fill className="object-cover" />
-        </div>
-        {preview && (
-          <button
-            onClick={clearImage}
-            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        )}
-      </div>
-
       <div
-        className={`border-2 border-dashed rounded-lg p-4 mb-4 text-center w-full max-w-xs cursor-pointer transition-colors ${
-          isDragging ? "border-blue-500 bg-blue-500/10" : "border-white/30 hover:border-blue-400 hover:bg-white/5"
-        }`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        onClick={triggerFileInput}
+        className={`relative ${sizeClasses[size]} rounded-full overflow-hidden border-2 border-white/30 shadow-md`}
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
       >
-        <input
-          type="file"
-          className="hidden"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          accept="image/jpeg, image/png, image/gif, image/webp"
+        <Image
+          src={photoUrl || "/images/default-profile.png"}
+          alt="Profile picture"
+          fill
+          className="object-cover"
+          sizes={`(max-width: 768px) ${size === "sm" ? "64px" : size === "md" ? "96px" : "128px"}, ${
+            size === "sm" ? "64px" : size === "md" ? "96px" : "128px"
+          }`}
         />
-        <div className="flex flex-col items-center gap-2">
-          <Upload className="h-6 w-6 text-white/70" />
-          <p className="text-sm text-white/70">이미지를 끌어다 놓거나 클릭하여 업로드하세요</p>
-          <p className="text-xs text-white/50">JPG, PNG, GIF, WEBP (최대 5MB)</p>
-        </div>
-      </div>
 
-      <div className={`animate-slide-in-up ${preview ? "opacity-100" : "opacity-0"} transition-opacity`}>
-        {preview && (
-          <button
-            className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors"
-            onClick={triggerFileInput}
-          >
-            <Camera className="h-4 w-4" />
-            다른 사진 선택
-          </button>
+        {isHovering && (
+          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div className="flex flex-col items-center">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="p-1 bg-white rounded-full text-gray-800 hover:bg-gray-200 transition-colors"
+              >
+                <Camera className="h-5 w-5" />
+              </button>
+              {photoUrl !== "/images/default-profile.png" && (
+                <button
+                  onClick={handleRemovePhoto}
+                  className="p-1 bg-white rounded-full text-red-500 hover:bg-gray-200 transition-colors mt-2"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              )}
+            </div>
+          </div>
         )}
       </div>
+
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept="image/*"
+        className="hidden"
+        aria-label="Upload profile picture"
+      />
+
+      <button
+        onClick={() => fileInputRef.current?.click()}
+        className="mt-3 flex items-center text-sm text-blue-400 hover:text-blue-300"
+      >
+        <Upload className="h-4 w-4 mr-1" />
+        사진 변경
+      </button>
     </div>
   )
 }

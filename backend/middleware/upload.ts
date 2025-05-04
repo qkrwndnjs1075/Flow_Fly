@@ -1,9 +1,10 @@
 import multer from "multer"
 import path from "path"
 import fs from "fs"
+import type { Request, Express } from "express"
 
 // 업로드 디렉토리 생성
-const uploadDir = "uploads/"
+const uploadDir = path.join(__dirname, "../uploads")
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true })
 }
@@ -21,7 +22,7 @@ const storage = multer.diskStorage({
 })
 
 // 파일 필터링
-const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"]
 
   if (allowedTypes.includes(file.mimetype)) {

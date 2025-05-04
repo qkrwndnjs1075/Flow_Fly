@@ -10,6 +10,7 @@ Flow_Fly 캘린더 애플리케이션의 백엔드 API 서버입니다.
 - MongoDB (Mongoose)
 - JWT 인증
 - Multer (파일 업로드)
+- Nodemailer (이메일 전송)
 
 ## 시작하기
 
@@ -27,6 +28,13 @@ Flow_Fly 캘린더 애플리케이션의 백엔드 API 서버입니다.
    JWT_SECRET=your_jwt_secret_key_here
    KAKAO_API_KEY=your_kakao_api_key_here
    NODE_ENV=development
+   
+   # 이메일 설정
+   EMAIL_HOST=smtp.example.com
+   EMAIL_PORT=587
+   EMAIL_SECURE=false
+   EMAIL_USER=your_email@example.com
+   EMAIL_PASS=your_email_password
    \`\`\`
 
 ### 개발 서버 실행
@@ -99,13 +107,17 @@ npm start
 
 \`\`\`
 backend/
-├── controllers/     # 컨트롤러 함수
-├── middleware/      # 미들웨어 (인증, 에러 처리 등)
-├── models/          # Mongoose 모델
-├── routes/          # API 라우트
-├── uploads/         # 업로드된 파일 저장 디렉토리
-├── .env             # 환경 변수
-├── .env.example     # 환경 변수 예시
-├── package.json     # 프로젝트 메타데이터 및 의존성
-├── server.ts        # 애플리케이션 진입점
-└── tsconfig.json    # TypeScript 설정
+├── src/
+│   ├── controllers/     # 컨트롤러 함수
+│   ├── middleware/      # 미들웨어 (인증, 에러 처리 등)
+│   ├── models/          # Mongoose 모델
+│   ├── routes/          # API 라우트
+│   ├── utils/           # 유틸리티 함수
+│   ├── types/           # 타입 정의
+│   ├── config/          # 설정 파일
+│   └── server.ts        # 애플리케이션 진입점
+├── uploads/             # 업로드된 파일 저장 디렉토리
+├── .env                 # 환경 변수
+├── .env.example         # 환경 변수 예시
+├── package.json         # 프로젝트 메타데이터 및 의존성
+└── tsconfig.json        # TypeScript 설정

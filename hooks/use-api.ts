@@ -1,69 +1,102 @@
-"use client"
+"use client";
 
-import { useSession } from "next-auth/react"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useCallback } from "react";
+import { useSession } from "next-auth/react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
+interface ApiOptions {
+  method?: string;
+  body?: any;
+  headers?: Record<string, string>;
+}
 
-type ApiOptions = {
-  requiresAuth?: boolean
-  method?: string
-  body?: any
-  formData?: FormData
+interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
 }
 
 export function useApi() {
-  const { data: session } = useSession()
-  const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
+  const { data: session } = useSession();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const fetchApi = async <T,>(
-    endpoint: string,
-    { requiresAuth = true, method = "GET", body = undefined, formData = undefined }: ApiOptions = {},
-  ): Promise<{ data?: T; error?: string; status: number; success: boolean }> => {
-    setIsLoading(true)
+  const fetchApi = useCallback(
+    async <T>(endpoint: string, options: ApiOptions = {}): Promise<ApiResponse<T>> => {
+      const { method = "GET", body, headers = {} } = options;
+      setIsLoading(true);
+      setError(null);
 
-    try {
-      const headers: Record<string, string> = {}
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+        const url = `${apiUrl}/${endpoint}`;
 
-      // 인증이 필요한 경우 토큰 추가
-      if (requiresAuth) {
-        if (!session?.accessToken) {
-          throw new Error("인증이 필요합니다. 로그인해주세요.")
+        // 인증 토큰 추가
+        const authHeaders: Record<string, string> = {};
+        if (session?.accessToken) {
+          authHeaders["Authorization"] = `Bearer ${session.accessToken}`;
         }
-        headers["Authorization"] = `Bearer ${session.accessToken}`
+
+        // 요청 헤더 설정
+        const requestHeaders = {
+          ...authHeaders,
+          ...headers,
+        };
+
+        // GET 요청이 아닌 경우 Content-Type 설정
+        if (method !== "GET" && body && !headers["Content-Type"]) {
+          requestHeaders["Content-Type"] = "application/json";
+        }
+
+        // 요청 옵션 구성
+        const requestOptions: RequestInit = {
+          method,
+          headers: requestHeaders,
+          credentials: "include",
+        };
+
+        // GET 요청이 아니고 body가 있는 경우 JSON 문자열로 변환
+        if (method !== "GET" && body) {
+          requestOptions.body = JSON.stringify(body);
+        }
+
+        console.log(`API 요청: ${url}`, { method, headers: requestHeaders });
+
+        const response = await fetch(url, requestOptions);
+
+        // 응답 상태 확인
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`API 오류 (${endpoint}): ${response.status} ${response.statusText}`, errorText);
+          throw new Error(errorText || `API 요청 실패: ${response.status}`);
+        }
+
+        // 응답이 비어있는지 확인
+        const text = await response.text();
+        if (!text) {
+          console.log(`API 응답이 비어있음: ${endpoint}`);
+          return { success: true, data: {} as T };
+        }
+
+        // JSON 파싱 시도
+        try {
+          const data = JSON.parse(text);
+          console.log(`API 응답: ${endpoint}`, data);
+          return { success: true, data };
+        } catch (jsonError) {
+          console.error(`JSON 파싱 오류 (${endpoint}):`, text, jsonError);
+          throw new Error(`JSON 파싱 오류: ${jsonError}`);
+        }
+      } catch (err: any) {
+        const errorMessage = err.message || "API 요청 중 오류가 발생했습니다";
+        console.error(`API 오류 (${endpoint}):`, err);
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      } finally {
+        setIsLoading(false);
       }
+    },
+    [session]
+  );
 
-      // JSON 본문 또는 FormData 설정
-      if (body && !formData) {
-        headers["Content-Type"] = "application/json"
-      }
-
-      const requestOptions: RequestInit = {
-        method,
-        headers,
-        body: formData || (body ? JSON.stringify(body) : undefined),
-      }
-
-      const response = await fetch(`${API_URL}/${endpoint}`, requestOptions)
-
-      // 인증 오류 처리
-      if (response.status === 401) {
-        router.push("/login")
-        throw new Error("인증이 만료되었습니다. 다시 로그인해주세요.")
-      }
-
-      const data = (await response.json()) as T
-
-      return { data, status: response.status, success: response.ok }
-    } catch (error: any) {
-      console.error(`API 오류 (${endpoint}):`, error)
-      return { error: error.message, status: 500, success: false }
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  return { fetchApi, isLoading }
+  return { fetchApi, isLoading, error };
 }

@@ -7,8 +7,8 @@ import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { ChevronLeft } from "lucide-react"
 import { useAuth } from "@/components/auth-context"
-import ProfilePictureUpload from "@/components/profile-picture-upload"
 import { useSettings } from "@/hooks/use-settings"
+import ProfilePictureUpload from "@/components/profile-picture-upload"
 
 export default function Settings() {
   const { user, logout, updateUserProfile } = useAuth()
@@ -16,7 +16,6 @@ export default function Settings() {
   const router = useRouter()
 
   const [darkMode, setDarkMode] = useState(false)
-  const [notifications, setNotifications] = useState(true)
   const [timeFormat, setTimeFormat] = useState<"12h" | "24h">("12h")
   const [startOfWeek, setStartOfWeek] = useState<"sunday" | "monday">("sunday")
   const [isSaved, setIsSaved] = useState(false)
@@ -24,25 +23,50 @@ export default function Settings() {
   const [photoUrl, setPhotoUrl] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
+  // 로컬 스토리지 키
+  const SETTINGS_STORAGE_KEY = "flow_fly_user_settings"
+
   // 초기 설정값 로드
   useEffect(() => {
+    console.log("설정 데이터:", settings)
+
+    // 로컬 스토리지에서 설정 불러오기
+    const loadSettingsFromLocalStorage = () => {
+      if (typeof window !== "undefined") {
+        const savedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY)
+        if (savedSettings) {
+          try {
+            const parsedSettings = JSON.parse(savedSettings)
+            setDarkMode(parsedSettings.darkMode ?? false)
+            setTimeFormat(parsedSettings.timeFormat ?? "12h")
+            setStartOfWeek(parsedSettings.startOfWeek ?? "sunday")
+            console.log("로컬 스토리지에서 설정 불러옴:", parsedSettings)
+          } catch (error) {
+            console.error("설정 파싱 오류:", error)
+          }
+        }
+      }
+    }
+
     // 백엔드 설정 데이터 로드
     if (settings) {
-      setDarkMode(settings.darkMode)
-      setNotifications(settings.notifications)
-      setTimeFormat(settings.timeFormat)
-      setStartOfWeek(settings.startOfWeek)
+      setDarkMode(settings.darkMode ?? false)
+      setTimeFormat(settings.timeFormat ?? "12h")
+      setStartOfWeek(settings.startOfWeek ?? "sunday")
+    } else {
+      loadSettingsFromLocalStorage()
     }
 
     // 사용자 정보 로드
     if (user) {
       setName(user.name || "")
-      setPhotoUrl(user.photoUrl || "")
+      setPhotoUrl(user.photoUrl || "/images/default-profile.png")
     }
   }, [user, settings])
 
   const handleLogout = async () => {
     await logout()
+    router.push("/login")
   }
 
   // 다크 모드 토글
@@ -50,34 +74,41 @@ export default function Settings() {
     setDarkMode(!darkMode)
   }
 
-  // 알림 토글
-  const toggleNotifications = () => {
-    setNotifications(!notifications)
-  }
-
   // 시간 형식 변경
   const handleTimeFormatChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value as "12h" | "24h"
     setTimeFormat(value)
+    console.log("시간 형식 변경:", value)
   }
 
   // 주 시작일 변경
   const handleStartOfWeekChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value as "sunday" | "monday"
     setStartOfWeek(value)
+    console.log("주 시작일 변경:", value)
   }
 
+  // 프로필 사진 변경 처리
+  const handlePhotoChange = (newPhotoUrl: string, file?: File) => {
+    setPhotoUrl(newPhotoUrl)
+    console.log("프로필 사진 변경:", newPhotoUrl)
+  }
+
+  // 설정 저장 함수
   const handleSave = async () => {
     setIsLoading(true)
 
     try {
+      console.log("설정 저장 시도:", { darkMode, timeFormat, startOfWeek })
+
       // 설정 저장
-      await updateSettings({
+      const settingsResult = await updateSettings({
         darkMode,
-        notifications,
         timeFormat,
         startOfWeek,
       })
+
+      console.log("설정 저장 결과:", settingsResult)
 
       // 사용자 프로필 업데이트
       if (user) {
@@ -87,21 +118,35 @@ export default function Settings() {
         })
       }
 
+      // 로컬 스토리지에 설정 저장 (백업용)
+      localStorage.setItem(
+        SETTINGS_STORAGE_KEY,
+        JSON.stringify({
+          darkMode,
+          timeFormat,
+          startOfWeek,
+        }),
+      )
+
       // 저장 성공 표시
       setIsSaved(true)
       setTimeout(() => {
         setIsSaved(false)
       }, 3000)
+
+      // 설정 변경 알림
+      alert("설정이 성공적으로 저장되었습니다. 변경사항을 적용하려면 페이지를 새로고침하세요.")
+
+      // 페이지 새로고침
+      setTimeout(() => {
+        window.location.reload()
+      }, 1000)
     } catch (error) {
       console.error("설정 저장 오류:", error)
+      alert("설정 저장 중 오류가 발생했습니다.")
     } finally {
       setIsLoading(false)
     }
-  }
-
-  // 프로필 사진 변경 처리
-  const handlePhotoChange = (newPhotoUrl: string) => {
-    setPhotoUrl(newPhotoUrl)
   }
 
   // 이름 변경 처리
@@ -155,24 +200,15 @@ export default function Settings() {
 
               <div className="flex flex-col md:flex-row gap-8 mb-6">
                 {/* 프로필 사진 섹션 */}
-                <div className={`${isGoogleUser ? "opacity-80" : ""}`}>
-                  {isGoogleUser ? (
-                    <div className="flex flex-col items-center">
-                      <div className="w-32 h-32 rounded-full overflow-hidden relative shadow-lg mb-2">
-                        <Image
-                          src={user?.photoUrl || "/placeholder.svg?height=100&width=100"}
-                          alt="Profile"
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                      <p className="text-xs text-white/70 mt-2 text-center max-w-[200px]">
-                        Google 계정으로 로그인한 사용자는 Google 프로필 사진이 사용됩니다
-                      </p>
-                    </div>
-                  ) : (
-                    <ProfilePictureUpload photoUrl={photoUrl} onChange={handlePhotoChange} />
-                  )}
+                <div>
+                  <div className="flex flex-col items-center">
+                    <ProfilePictureUpload initialPhotoUrl={photoUrl} onPhotoChange={handlePhotoChange} size="lg" />
+                    <p className="text-xs text-white/70 mt-2 text-center max-w-[200px]">
+                      {isGoogleUser
+                        ? "Google 계정으로 로그인한 사용자도 프로필 사진을 변경할 수 있습니다"
+                        : "프로필 사진"}
+                    </p>
+                  </div>
                 </div>
 
                 {/* 계정 정보 섹션 */}
@@ -181,18 +217,14 @@ export default function Settings() {
                     <label htmlFor="name" className="block text-sm text-white/70 mb-1">
                       이름
                     </label>
-                    {isGoogleUser ? (
-                      <p>{user?.name || ""}</p>
-                    ) : (
-                      <input
-                        id="name"
-                        type="text"
-                        value={name}
-                        onChange={handleNameChange}
-                        className="w-full bg-white/10 border border-white/20 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="이름"
-                      />
-                    )}
+                    <input
+                      id="name"
+                      type="text"
+                      value={name}
+                      onChange={handleNameChange}
+                      className="w-full bg-white/10 border border-white/20 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="이름"
+                    />
                   </div>
 
                   <div>
@@ -251,22 +283,6 @@ export default function Settings() {
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" checked={darkMode} onChange={toggleDarkMode} className="sr-only peer" />
-                    <div className="w-11 h-6 bg-white/20 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
-                  </label>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">알림</p>
-                    <p className="text-sm text-white/70">앱 알림을 활성화합니다</p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={notifications}
-                      onChange={toggleNotifications}
-                      className="sr-only peer"
-                    />
                     <div className="w-11 h-6 bg-white/20 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
                   </label>
                 </div>

@@ -51,8 +51,25 @@ export default function MonthView({
   const getEventsForDay = (day: number) => {
     if (!day) return []
 
-    // 실제 앱에서는 날짜 비교 로직이 필요하지만, MVP에서는 간단히 구현
-    return events.filter((event) => event.day === day % 7 || event.day === (day % 7 || 7))
+    try {
+      // 해당 월의 특정 일에 해당하는 이벤트 필터링
+      return events.filter((event) => {
+        try {
+          const eventDate = new Date(event.date)
+          return (
+            eventDate.getDate() === day &&
+            eventDate.getMonth() === currentMonthIndex &&
+            eventDate.getFullYear() === currentYear
+          )
+        } catch (error) {
+          console.error("이벤트 날짜 처리 오류:", error, event)
+          return false
+        }
+      })
+    } catch (error) {
+      console.error("이벤트 필터링 오류:", error)
+      return []
+    }
   }
 
   // 날짜 클릭 핸들러 추가

@@ -1,57 +1,57 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
 import Image from "next/image"
-import { useAuth } from "@/components/auth-context"
-import { Mail, Lock } from "lucide-react"
+import { signIn, useSession } from "next-auth/react"
+import { FcGoogle } from "react-icons/fc"
 
 export default function Login() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
   const router = useRouter()
-  const { login, googleLogin } = useAuth()
+  const { status } = useSession()
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-    setIsLoading(true)
-
-    try {
-      const success = await login(email, password)
-      if (success) {
-        router.push("/")
-      } else {
-        setError("이메일 또는 비밀번호가 올바르지 않습니다")
-      }
-    } catch (err) {
-      setError("오류가 발생했습니다. 다시 시도해주세요.")
-    } finally {
-      setIsLoading(false)
+  // 이미 로그인된 경우 메인 페이지로 리디렉션
+  useEffect(() => {
+    console.log("로그인 페이지 세션 상태:", status)
+    if (status === "authenticated") {
+      console.log("인증됨, 메인 페이지로 리디렉션")
+      router.push("/")
     }
-  }
+  }, [status, router])
 
   const handleGoogleLogin = async () => {
     setError("")
     setIsLoading(true)
 
     try {
-      const success = await googleLogin()
-      if (success) {
-        router.push("/")
-      } else {
+      console.log("구글 로그인 시도")
+      const result = await signIn("google", {
+        callbackUrl: "/",
+        redirect: true,
+      })
+
+      console.log("구글 로그인 결과:", result)
+
+      // 리디렉션이 자동으로 처리되므로 아래 코드는 실행되지 않을 수 있음
+      if (result?.error) {
         setError("Google 로그인에 실패했습니다")
       }
     } catch (err) {
+      console.error("로그인 오류:", err)
       setError("오류가 발생했습니다. 다시 시도해주세요.")
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (status === "loading") {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-white">로딩 중...</div>
+      </div>
+    )
   }
 
   return (
@@ -66,101 +66,35 @@ export default function Login() {
       />
 
       <div className="relative z-10 w-full max-w-md p-8 bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl">
-        <h1 className="text-3xl font-bold text-white text-center mb-8">로그인</h1>
+        <h1 className="text-3xl font-bold text-white text-center mb-8">Flow_Fly</h1>
+
+        <div className="text-center text-white mb-8">
+          <p className="text-lg">스마트 캘린더 & 일정 관리</p>
+          <p className="text-sm mt-2 opacity-80">Google 계정으로 로그인하여 시작하세요</p>
+        </div>
 
         {error && <div className="bg-red-500/20 border border-red-500/50 text-white p-3 rounded-md mb-4">{error}</div>}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-white mb-1">
-              이메일
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" />
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-white/10 border border-white/20 rounded-md pl-10 pr-4 py-2 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="your@email.com"
-                required
-              />
-            </div>
-          </div>
+        <button
+          onClick={handleGoogleLogin}
+          disabled={isLoading}
+          className="w-full flex items-center justify-center gap-3 bg-white text-gray-800 py-3 rounded-md transition-colors font-medium hover:bg-gray-100 disabled:opacity-70 shadow-md"
+        >
+          <FcGoogle className="text-2xl" />
+          <span>{isLoading ? "로그인 중..." : "Google로 계속하기"}</span>
+        </button>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-white mb-1">
-              비밀번호
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" />
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-white/10 border border-white/20 rounded-md pl-10 pr-4 py-2 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="••••••••"
-                required
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-md transition-colors font-medium disabled:opacity-70"
-          >
-            {isLoading ? "로그인 중..." : "로그인"}
-          </button>
-        </form>
-
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/20"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white/10 text-white/70">또는</span>
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <button
-              onClick={handleGoogleLogin}
-              disabled={isLoading}
-              className="w-full flex items-center justify-center gap-3 bg-white text-gray-800 py-2 rounded-md transition-colors font-medium hover:bg-gray-100 disabled:opacity-70"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px">
-                <path
-                  fill="#FFC107"
-                  d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"
-                />
-                <path
-                  fill="#FF3D00"
-                  d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"
-                />
-                <path
-                  fill="#4CAF50"
-                  d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"
-                />
-                <path
-                  fill="#1976D2"
-                  d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"
-                />
-              </svg>
-              <span>Google로 로그인</span>
-            </button>
-          </div>
-        </div>
-
-        <div className="mt-6 text-center text-white">
+        <div className="mt-8 text-center text-white text-sm opacity-70">
           <p>
-            계정이 없으신가요?{" "}
-            <Link href="/signup" className="text-blue-300 hover:underline">
-              회원가입
-            </Link>
+            로그인하면 Flow_Fly의{" "}
+            <a href="#" className="underline">
+              서비스 약관
+            </a>{" "}
+            및{" "}
+            <a href="#" className="underline">
+              개인정보처리방침
+            </a>
+            에 동의하게 됩니다.
           </p>
         </div>
       </div>

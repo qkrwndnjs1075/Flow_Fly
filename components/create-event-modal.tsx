@@ -2,36 +2,41 @@
 
 import type React from "react"
 
-import { useState } from "react"
-import { X, MapPin } from "lucide-react"
+import { useState, useEffect } from "react"
+import { X } from "lucide-react"
 import TimePickerKeyboard from "./time-picker-keyboard"
-import KakaoMapSearch from "./kakao-map-search"
+
+// 컴포넌트 props 수정
+type CreateEventModalProps = {
+  isOpen: boolean
+  onClose: () => void
+  onSave: (event: EventFormData) => void
+  currentDate: number
+  currentYear?: number
+  currentMonthIndex?: number
+  calendars: Array<{ name: string; color: string; id: string }>
+  selectedCalendarId: string
+}
 
 type EventFormData = {
   title: string
   startTime: string
   endTime: string
   description: string
-  location: string
   color: string
   day: number
   calendarId: string
+  date: string
 }
 
-type CreateEventModalProps = {
-  isOpen: boolean
-  onClose: () => void
-  onSave: (event: EventFormData) => void
-  currentDate: number
-  calendars: Array<{ name: string; color: string; id: string }>
-  selectedCalendarId: string
-}
-
+// 컴포넌트 함수 수정
 export default function CreateEventModal({
   isOpen,
   onClose,
   onSave,
   currentDate,
+  currentYear = new Date().getFullYear(),
+  currentMonthIndex = new Date().getMonth(),
   calendars,
   selectedCalendarId,
 }: CreateEventModalProps) {
@@ -40,13 +45,27 @@ export default function CreateEventModal({
     startTime: "09:00",
     endTime: "10:00",
     description: "",
-    location: "",
     color: "bg-blue-500",
-    day: currentDate || 1,
+    day: new Date(currentYear, currentMonthIndex, currentDate).getDay(), // 요일 계산 (0: 일요일, 1: 월요일, ...)
     calendarId: selectedCalendarId,
+    date: new Date(currentYear, currentMonthIndex, currentDate).toISOString(), // ISO 문자열로 변환
   })
 
-  const [showMapSearch, setShowMapSearch] = useState(false)
+  // 모달이 열릴 때마다 폼 데이터 초기화
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        title: "",
+        startTime: "09:00",
+        endTime: "10:00",
+        description: "",
+        color: "bg-blue-500",
+        day: new Date(currentYear, currentMonthIndex, currentDate).getDay(),
+        calendarId: selectedCalendarId,
+        date: new Date(currentYear, currentMonthIndex, currentDate).toISOString(),
+      })
+    }
+  }, [isOpen, currentDate, currentYear, currentMonthIndex, selectedCalendarId])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -57,16 +76,28 @@ export default function CreateEventModal({
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    onSave(formData)
-    onClose()
-  }
 
-  const handleSelectLocation = (location: { address: string; placeName?: string }) => {
-    const locationText = location.placeName ? `${location.placeName} (${location.address})` : location.address
+    // 날짜 객체 생성 (현재 날짜에 선택된 날짜로 설정)
+    const eventDate = new Date(currentYear, currentMonthIndex, currentDate)
 
-    setFormData((prev) => ({ ...prev, location: locationText }))
+    // 서버에 전송할 데이터 준비
+    const eventData = {
+      ...formData,
+      date: eventDate.toISOString(), // ISO 문자열로 변환
+      day: eventDate.getDay(), // 요일 정보 추가 (0: 일요일, 1: 월요일, ...)
+    }
+
+    console.log("이벤트 저장 데이터:", eventData)
+
+    try {
+      onSave(eventData)
+      onClose()
+    } catch (error) {
+      console.error("이벤트 저장 오류:", error)
+      alert("일정을 저장하는 중 오류가 발생했습니다.")
+    }
   }
 
   if (!isOpen) return null
@@ -128,27 +159,6 @@ export default function CreateEventModal({
             </div>
 
             <div>
-              <label className="block mb-1 text-sm">위치</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  className="w-full bg-white/10 dark:bg-gray-700/30 border border-white/20 dark:border-gray-600/30 rounded-md px-3 py-2 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="위치 추가"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowMapSearch(true)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-white/70 hover:text-white"
-                >
-                  <MapPin className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-
-            <div>
               <label className="block mb-1 text-sm">설명</label>
               <textarea
                 name="description"
@@ -197,10 +207,6 @@ export default function CreateEventModal({
           </div>
         </form>
       </div>
-
-      {showMapSearch && (
-        <KakaoMapSearch onSelectLocation={handleSelectLocation} onClose={() => setShowMapSearch(false)} />
-      )}
     </div>
   )
 }

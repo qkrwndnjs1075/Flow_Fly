@@ -11,7 +11,7 @@ import { auth } from "../middleware/auth"
 
 const router = express.Router()
 
-// 모든 라우트에 인증 미들웨어 적용 (createNotification 제외)
+// 모든 라우트에 인증 미들웨어 적용
 router.use(auth)
 
 // 사용자의 모든 알림 조회

@@ -14,7 +14,7 @@ export const getCalendars = async (req: Request, res: Response) => {
       calendars,
     })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ success: false, message: error.message })
   }
 }
 
@@ -24,9 +24,13 @@ export const createCalendar = async (req: Request, res: Response) => {
     const { name, color } = req.body
     const userId = req.user._id
 
+    if (!name) {
+      return res.status(400).json({ success: false, message: "캘린더 이름은 필수입니다" })
+    }
+
     const calendar = await Calendar.create({
       name,
-      color,
+      color: color || "bg-blue-500",
       user: userId,
     })
 
@@ -35,7 +39,7 @@ export const createCalendar = async (req: Request, res: Response) => {
       calendar,
     })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ success: false, message: error.message })
   }
 }
 
@@ -49,7 +53,7 @@ export const updateCalendar = async (req: Request, res: Response) => {
     // 캘린더 소유권 확인
     const calendar = await Calendar.findOne({ _id: id, user: userId })
     if (!calendar) {
-      return res.status(404).json({ message: "캘린더를 찾을 수 없거나 접근 권한이 없습니다" })
+      return res.status(404).json({ success: false, message: "캘린더를 찾을 수 없거나 접근 권한이 없습니다" })
     }
 
     // 캘린더 업데이트
@@ -60,7 +64,7 @@ export const updateCalendar = async (req: Request, res: Response) => {
       calendar: updatedCalendar,
     })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ success: false, message: error.message })
   }
 }
 
@@ -73,7 +77,13 @@ export const deleteCalendar = async (req: Request, res: Response) => {
     // 캘린더 소유권 확인
     const calendar = await Calendar.findOne({ _id: id, user: userId })
     if (!calendar) {
-      return res.status(404).json({ message: "캘린더를 찾을 수 없거나 접근 권한이 없습니다" })
+      return res.status(404).json({ success: false, message: "캘린더를 찾을 수 없거나 접근 권한이 없습니다" })
+    }
+
+    // 사용자의 캘린더 수 확인 (최소 1개는 유지)
+    const calendarCount = await Calendar.countDocuments({ user: userId })
+    if (calendarCount <= 1) {
+      return res.status(400).json({ success: false, message: "최소 1개의 캘린더는 유지해야 합니다" })
     }
 
     // 캘린더에 속한 이벤트 삭제
@@ -87,6 +97,6 @@ export const deleteCalendar = async (req: Request, res: Response) => {
       message: "캘린더가 성공적으로 삭제되었습니다",
     })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ success: false, message: error.message })
   }
 }
