@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import User from "@/app/models/User";
 import { comparePasswords, generateAccessToken, generateRefreshToken } from "@/app/utils/auth";
-import { storeRefreshToken } from "@/app/sevice/tokenService";
+import { storeRefreshToken } from "@/app/sevice/tokenService"; 
 
 export async function POST(req: Request) {
   await dbConnect();
