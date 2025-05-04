@@ -24,7 +24,7 @@ export const getUserSettings = async (req: Request, res: Response) => {
       settings,
     })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ success: false, message: error.message })
   }
 }
 
@@ -51,6 +51,6 @@ export const updateUserSettings = async (req: Request, res: Response) => {
       settings,
     })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ success: false, message: error.message })
   }
 }

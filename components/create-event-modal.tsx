@@ -57,10 +57,29 @@ export default function CreateEventModal({
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // handleSubmit 함수를 수정합니다
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    onSave(formData)
-    onClose()
+
+    // 날짜 객체 생성 (현재 날짜에 선택된 날짜로 설정)
+    const today = new Date()
+    const eventDate = new Date(today.getFullYear(), today.getMonth(), currentDate)
+
+    // 서버에 전송할 데이터 준비
+    const eventData = {
+      ...formData,
+      date: eventDate.toISOString(), // ISO 문자열로 변환
+    }
+
+    console.log("이벤트 저장 데이터:", eventData)
+
+    try {
+      onSave(eventData)
+      onClose()
+    } catch (error) {
+      console.error("이벤트 저장 오류:", error)
+      alert("일정을 저장하는 중 오류가 발생했습니다.")
+    }
   }
 
   const handleSelectLocation = (location: { address: string; placeName?: string }) => {

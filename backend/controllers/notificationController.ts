@@ -15,7 +15,7 @@ export const getNotifications = async (req: Request, res: Response) => {
       notifications,
     })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ success: false, message: error.message })
   }
 }
 
@@ -28,7 +28,7 @@ export const markAsRead = async (req: Request, res: Response) => {
     // 알림 소유권 확인
     const notification = await Notification.findOne({ _id: id, user: userId })
     if (!notification) {
-      return res.status(404).json({ message: "알림을 찾을 수 없거나 접근 권한이 없습니다" })
+      return res.status(404).json({ success: false, message: "알림을 찾을 수 없거나 접근 권한이 없습니다" })
     }
 
     // 알림 업데이트
@@ -39,7 +39,7 @@ export const markAsRead = async (req: Request, res: Response) => {
       notification: updatedNotification,
     })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ success: false, message: error.message })
   }
 }
 
@@ -55,7 +55,7 @@ export const markAllAsRead = async (req: Request, res: Response) => {
       message: "모든 알림이 읽음 표시되었습니다",
     })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ success: false, message: error.message })
   }
 }
 
@@ -68,7 +68,7 @@ export const deleteNotification = async (req: Request, res: Response) => {
     // 알림 소유권 확인
     const notification = await Notification.findOne({ _id: id, user: userId })
     if (!notification) {
-      return res.status(404).json({ message: "알림을 찾을 수 없거나 접근 권한이 없습니다" })
+      return res.status(404).json({ success: false, message: "알림을 찾을 수 없거나 접근 권한이 없습니다" })
     }
 
     // 알림 삭제
@@ -79,7 +79,7 @@ export const deleteNotification = async (req: Request, res: Response) => {
       message: "알림이 성공적으로 삭제되었습니다",
     })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ success: false, message: error.message })
   }
 }
 
@@ -95,7 +95,7 @@ export const deleteAllNotifications = async (req: Request, res: Response) => {
       message: "모든 알림이 삭제되었습니다",
     })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ success: false, message: error.message })
   }
 }
 
@@ -104,7 +104,10 @@ export const createNotification = async (req: Request, res: Response) => {
   try {
     const { title, message, type, userId, relatedEventId } = req.body
 
-    // 관리자 권한 확인 (실제 앱에서는 관리자 권한 확인 로직 필요)
+    // 필수 필드 검증
+    if (!title || !message || !type || !userId) {
+      return res.status(400).json({ success: false, message: "필수 필드를 모두 입력해주세요" })
+    }
 
     const notification = await Notification.create({
       title,
@@ -121,6 +124,6 @@ export const createNotification = async (req: Request, res: Response) => {
       notification,
     })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ success: false, message: error.message })
   }
 }

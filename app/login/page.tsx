@@ -2,12 +2,13 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { useAuth } from "@/components/auth-context"
 import { Mail, Lock } from "lucide-react"
+import { useSession } from "next-auth/react"
 
 export default function Login() {
   const [email, setEmail] = useState("")
@@ -16,6 +17,14 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
   const { login, googleLogin } = useAuth()
+  const { status } = useSession()
+
+  // 이미 로그인된 경우 메인 페이지로 리디렉션
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.push("/")
+    }
+  }, [status, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -24,9 +33,7 @@ export default function Login() {
 
     try {
       const success = await login(email, password)
-      if (success) {
-        router.push("/")
-      } else {
+      if (!success) {
         setError("이메일 또는 비밀번호가 올바르지 않습니다")
       }
     } catch (err) {
@@ -42,9 +49,7 @@ export default function Login() {
 
     try {
       const success = await googleLogin()
-      if (success) {
-        router.push("/")
-      } else {
+      if (!success) {
         setError("Google 로그인에 실패했습니다")
       }
     } catch (err) {
@@ -52,6 +57,14 @@ export default function Login() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (status === "loading") {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-white">로딩 중...</div>
+      </div>
+    )
   }
 
   return (

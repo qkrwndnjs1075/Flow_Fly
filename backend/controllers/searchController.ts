@@ -9,7 +9,7 @@ export const searchEvents = async (req: Request, res: Response) => {
     const userId = req.user._id
 
     if (!query || typeof query !== "string") {
-      return res.status(400).json({ message: "검색어를 입력해주세요" })
+      return res.status(400).json({ success: false, message: "검색어를 입력해주세요" })
     }
 
     // 사용자의 캘린더 ID 목록 조회
@@ -31,6 +31,6 @@ export const searchEvents = async (req: Request, res: Response) => {
       results: searchResults,
     })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ success: false, message: error.message })
   }
 }

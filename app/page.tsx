@@ -23,6 +23,7 @@ import MonthView from "@/components/month-view"
 import ThemeToggle from "@/components/theme-toggle"
 import NotificationsPanel from "@/components/notifications-panel"
 import { useAuth } from "@/components/auth-context"
+import { useSession } from "next-auth/react"
 
 export default function Home() {
   // AI 추천 관련 상태 및 함수 수정
@@ -37,6 +38,7 @@ export default function Home() {
 
   const router = useRouter()
   const { user } = useAuth()
+  const { data: session } = useSession()
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showAddCalendarModal, setShowAddCalendarModal] = useState(false)
   const [currentMonthIndex, setCurrentMonthIndex] = useState(2) // 3월 (0-indexed)
@@ -129,20 +131,88 @@ export default function Home() {
   }, [])
 
   // 이벤트 추가 함수
-  const handleAddEvent = (newEvent) => {
-    // MVP에서는 간단히 콘솔에 로그만 출력
-    console.log("새 일정:", newEvent)
-    // 실제 앱에서는 events 배열에 추가하고 저장
+  const handleAddEvent = async (newEvent) => {
+    console.log("새 일정 추가 요청:", newEvent)
+
+    try {
+      // 필수 필드 확인
+      if (!newEvent.title || !newEvent.startTime || !newEvent.endTime || !newEvent.calendarId) {
+        console.error("필수 필드 누락:", newEvent)
+        alert("모든 필수 정보를 입력해주세요.")
+        return
+      }
+
+      // 날짜 형식 확인
+      if (!newEvent.date) {
+        console.error("날짜 정보 누락")
+        const today = new Date()
+        newEvent.date = today.toISOString()
+      }
+
+      // API 호출을 통한 이벤트 저장
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/events`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.accessToken}`,
+        },
+        body: JSON.stringify(newEvent),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || "이벤트 저장 실패")
+      }
+
+      const data = await response.json()
+      console.log("이벤트 저장 성공:", data)
+
+      // 이벤트 목록 갱신 (실제 앱에서는 events 배열에 추가)
+      // 여기서는 임시로 events 배열에 추가하는 로직을 구현할 수 있습니다
+
+      alert("일정이 성공적으로 저장되었습니다.")
+    } catch (error) {
+      console.error("이벤트 저장 오류:", error)
+      alert(`일정 저장 실패: ${error.message}`)
+    }
   }
 
   // 캘린더 추가 함수
-  const handleAddCalendar = (newCalendar) => {
-    const newCalendarWithId = {
-      ...newCalendar,
-      id: `cal-${myCalendars.length + 1}-${Date.now()}`,
+  const handleAddCalendar = async (newCalendar) => {
+    console.log("새 캘린더 추가 요청:", newCalendar)
+
+    try {
+      // API 호출을 통한 캘린더 저장
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/calendars`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.accessToken}`,
+        },
+        body: JSON.stringify(newCalendar),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || "캘린더 저장 실패")
+      }
+
+      const data = await response.json()
+      console.log("캘린더 저장 성공:", data)
+
+      const newCalendarWithId = {
+        ...newCalendar,
+        id: data.calendar._id || `cal-${myCalendars.length + 1}-${Date.now()}`,
+      }
+
+      setMyCalendars((prev) => [...prev, newCalendarWithId])
+      setActiveCalendars((prev) => [...prev, newCalendarWithId.id])
+
+      alert("캘린더가 성공적으로 저장되었습니다.")
+    } catch (error) {
+      console.error("캘린더 저장 오류:", error)
+      alert(`캘린더 저장 실패: ${error.message}`)
     }
-    setMyCalendars((prev) => [...prev, newCalendarWithId])
-    setActiveCalendars((prev) => [...prev, newCalendarWithId.id])
   }
 
   // 캘린더 토글 함수

@@ -7,14 +7,14 @@ export const searchPlaces = async (req: Request, res: Response) => {
     const { query } = req.query
 
     if (!query || typeof query !== "string") {
-      return res.status(400).json({ message: "검색어를 입력해주세요" })
+      return res.status(400).json({ success: false, message: "검색어를 입력해주세요" })
     }
 
     // 카카오맵 API 키
     const kakaoApiKey = process.env.KAKAO_API_KEY
 
     if (!kakaoApiKey) {
-      return res.status(500).json({ message: "카카오맵 API 키가 설정되지 않았습니다" })
+      return res.status(500).json({ success: false, message: "카카오맵 API 키가 설정되지 않았습니다" })
     }
 
     // 카카오맵 API 호출
@@ -32,7 +32,7 @@ export const searchPlaces = async (req: Request, res: Response) => {
       places: response.data.documents,
     })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ success: false, message: error.message })
   }
 }
 
@@ -42,14 +42,14 @@ export const searchAddress = async (req: Request, res: Response) => {
     const { query } = req.query
 
     if (!query || typeof query !== "string") {
-      return res.status(400).json({ message: "검색어를 입력해주세요" })
+      return res.status(400).json({ success: false, message: "검색어를 입력해주세요" })
     }
 
     // 카카오맵 API 키
     const kakaoApiKey = process.env.KAKAO_API_KEY
 
     if (!kakaoApiKey) {
-      return res.status(500).json({ message: "카카오맵 API 키가 설정되지 않았습니다" })
+      return res.status(500).json({ success: false, message: "카카오맵 API 키가 설정되지 않았습니다" })
     }
 
     // 카카오맵 API 호출
@@ -67,6 +67,6 @@ export const searchAddress = async (req: Request, res: Response) => {
       addresses: response.data.documents,
     })
   } catch (error: any) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ success: false, message: error.message })
   }
 }

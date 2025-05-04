@@ -18,12 +18,16 @@ export const authOptions = {
       },
       async authorize(credentials) {
         try {
+          if (!credentials?.email || !credentials?.password) {
+            return null
+          }
+
           const response = await fetch(`${API_URL}/auth/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              email: credentials?.email,
-              password: credentials?.password,
+              email: credentials.email,
+              password: credentials.password,
             }),
           })
 
@@ -59,6 +63,8 @@ export const authOptions = {
       // Google 로그인 시 백엔드에 사용자 정보 전달
       if (account?.provider === "google" && profile?.email) {
         try {
+          console.log("Google 로그인 시도:", profile.email)
+
           const response = await fetch(`${API_URL}/auth/google`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -69,12 +75,28 @@ export const authOptions = {
             }),
           })
 
+          if (!response.ok) {
+            console.error("Google 인증 실패:", await response.text())
+            return token
+          }
+
+          // 응답이 JSON이 아닌 경우 처리
+          const contentType = response.headers.get("content-type")
+          if (!contentType || !contentType.includes("application/json")) {
+            console.error("Invalid response format:", await response.text())
+            return token
+          }
+
           const data = await response.json()
 
-          if (response.ok && data.success) {
+          console.log("백엔드 응답:", data)
+
+          if (data.success) {
             token.id = data.user.id
             token.accessToken = data.token
             token.provider = "google"
+          } else {
+            console.error("Google 인증 실패:", data)
           }
         } catch (error) {
           console.error("Google auth error:", error)
@@ -91,16 +113,21 @@ export const authOptions = {
       }
       return session
     },
+    async redirect({ url, baseUrl }) {
+      // 로그인 성공 후 리디렉션 처리
+      return baseUrl
+    },
   },
   pages: {
     signIn: "/login",
     error: "/login",
   },
+  debug: process.env.NODE_ENV === "development",
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30일
   },
-  secret: process.env.NEXTAUTH_SECRET || "your-secret-key",
+  secret: process.env.NEXTAUTH_SECRET,
 }
 
 const handler = NextAuth(authOptions)
