@@ -7,85 +7,29 @@ import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { ChevronLeft } from "lucide-react"
 import { useAuth } from "@/components/auth-context"
-import { useSettings } from "@/hooks/use-settings"
 import ProfilePictureUpload from "@/components/profile-picture-upload"
 
 export default function Settings() {
   const { user, logout, updateUserProfile } = useAuth()
-  const { settings, updateSettings, isLoading: settingsLoading } = useSettings()
   const router = useRouter()
 
-  const [darkMode, setDarkMode] = useState(false)
-  const [timeFormat, setTimeFormat] = useState<"12h" | "24h">("12h")
-  const [startOfWeek, setStartOfWeek] = useState<"sunday" | "monday">("sunday")
   const [isSaved, setIsSaved] = useState(false)
   const [name, setName] = useState("")
   const [photoUrl, setPhotoUrl] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
-  // 로컬 스토리지 키
-  const SETTINGS_STORAGE_KEY = "flow_fly_user_settings"
-
   // 초기 설정값 로드
   useEffect(() => {
-    console.log("설정 데이터:", settings)
-
-    // 로컬 스토리지에서 설정 불러오기
-    const loadSettingsFromLocalStorage = () => {
-      if (typeof window !== "undefined") {
-        const savedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY)
-        if (savedSettings) {
-          try {
-            const parsedSettings = JSON.parse(savedSettings)
-            setDarkMode(parsedSettings.darkMode ?? false)
-            setTimeFormat(parsedSettings.timeFormat ?? "12h")
-            setStartOfWeek(parsedSettings.startOfWeek ?? "sunday")
-            console.log("로컬 스토리지에서 설정 불러옴:", parsedSettings)
-          } catch (error) {
-            console.error("설정 파싱 오류:", error)
-          }
-        }
-      }
-    }
-
-    // 백엔드 설정 데이터 로드
-    if (settings) {
-      setDarkMode(settings.darkMode ?? false)
-      setTimeFormat(settings.timeFormat ?? "12h")
-      setStartOfWeek(settings.startOfWeek ?? "sunday")
-    } else {
-      loadSettingsFromLocalStorage()
-    }
-
     // 사용자 정보 로드
     if (user) {
       setName(user.name || "")
       setPhotoUrl(user.photoUrl || "/images/default-profile.png")
     }
-  }, [user, settings])
+  }, [user])
 
   const handleLogout = async () => {
     await logout()
     router.push("/login")
-  }
-
-  // 다크 모드 토글
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode)
-  }
-
-  // 시간 형식 변경
-  const handleTimeFormatChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value as "12h" | "24h"
-    setTimeFormat(value)
-    console.log("시간 형식 변경:", value)
-  }
-
-  // 주 시작일 변경
-  const handleStartOfWeekChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value as "sunday" | "monday"
-    setStartOfWeek(value)
-    console.log("주 시작일 변경:", value)
   }
 
   // 프로필 사진 변경 처리
@@ -99,16 +43,7 @@ export default function Settings() {
     setIsLoading(true)
 
     try {
-      console.log("설정 저장 시도:", { darkMode, timeFormat, startOfWeek })
-
-      // 설정 저장
-      const settingsResult = await updateSettings({
-        darkMode,
-        timeFormat,
-        startOfWeek,
-      })
-
-      console.log("설정 저장 결과:", settingsResult)
+      console.log("프로필 정보 저장 시도:", { name, photoUrl })
 
       // 사용자 프로필 업데이트
       if (user) {
@@ -118,16 +53,6 @@ export default function Settings() {
         })
       }
 
-      // 로컬 스토리지에 설정 저장 (백업용)
-      localStorage.setItem(
-        SETTINGS_STORAGE_KEY,
-        JSON.stringify({
-          darkMode,
-          timeFormat,
-          startOfWeek,
-        }),
-      )
-
       // 저장 성공 표시
       setIsSaved(true)
       setTimeout(() => {
@@ -135,15 +60,10 @@ export default function Settings() {
       }, 3000)
 
       // 설정 변경 알림
-      alert("설정이 성공적으로 저장되었습니다. 변경사항을 적용하려면 페이지를 새로고침하세요.")
-
-      // 페이지 새로고침
-      setTimeout(() => {
-        window.location.reload()
-      }, 1000)
+      alert("프로필이 성공적으로 저장되었습니다.")
     } catch (error) {
-      console.error("설정 저장 오류:", error)
-      alert("설정 저장 중 오류가 발생했습니다.")
+      console.error("프로필 저장 오류:", error)
+      alert("프로필 저장 중 오류가 발생했습니다.")
     } finally {
       setIsLoading(false)
     }
@@ -156,17 +76,6 @@ export default function Settings() {
 
   // 구글 로그인 사용자인지 확인
   const isGoogleUser = user?.provider === "google"
-
-  if (settingsLoading) {
-    return (
-      <div className="relative min-h-screen w-full flex items-center justify-center bg-gray-900">
-        <div className="text-white text-center">
-          <div className="mb-4">로딩 중...</div>
-          <div className="w-10 h-10 border-t-2 border-blue-500 border-solid rounded-full animate-spin mx-auto"></div>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
@@ -272,55 +181,6 @@ export default function Settings() {
               </div>
             </div>
 
-            <div>
-              <h2 className="text-xl font-semibold mb-4">앱 설정</h2>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">다크 모드</p>
-                    <p className="text-sm text-white/70">어두운 테마로 전환합니다</p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" checked={darkMode} onChange={toggleDarkMode} className="sr-only peer" />
-                    <div className="w-11 h-6 bg-white/20 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
-                  </label>
-                </div>
-
-                <div>
-                  <label htmlFor="timeFormat" className="block font-medium mb-1">
-                    시간 형식
-                  </label>
-                  <select
-                    id="timeFormat"
-                    value={timeFormat}
-                    onChange={handleTimeFormatChange}
-                    className="w-full bg-white/10 border border-white/20 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="12h">12시간 (AM/PM)</option>
-                    <option value="24h">24시간</option>
-                  </select>
-                  <p className="text-sm text-white/70 mt-1">시간 표시 형식을 선택합니다</p>
-                </div>
-
-                <div>
-                  <label htmlFor="startOfWeek" className="block font-medium mb-1">
-                    주 시작일
-                  </label>
-                  <select
-                    id="startOfWeek"
-                    value={startOfWeek}
-                    onChange={handleStartOfWeekChange}
-                    className="w-full bg-white/10 border border-white/20 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="sunday">일요일</option>
-                    <option value="monday">월요일</option>
-                  </select>
-                  <p className="text-sm text-white/70 mt-1">캘린더의 주 시작일을 선택합니다</p>
-                </div>
-              </div>
-            </div>
-
             <div className="pt-4 border-t border-white/10">
               <div className="flex justify-between items-center">
                 <button
@@ -337,7 +197,7 @@ export default function Settings() {
                     disabled={isLoading}
                     className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors disabled:opacity-70"
                   >
-                    {isLoading ? "저장 중..." : "설정 저장"}
+                    {isLoading ? "저장 중..." : "프로필 저장"}
                   </button>
                 </div>
               </div>
