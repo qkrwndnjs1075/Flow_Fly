@@ -44,14 +44,6 @@ export default function DayView({
       const eventDateString = eventDate.toISOString().split("T")[0]
       const selectedDateString = selectedDate.toISOString().split("T")[0]
 
-      // 디버깅 로그
-      console.log("일 뷰 이벤트 필터링:", {
-        eventId: event._id,
-        eventDate: eventDateString,
-        selectedDate: selectedDateString,
-        match: eventDateString === selectedDateString,
-      })
-
       // 날짜 문자열 비교
       return eventDateString === selectedDateString
     } catch (error) {
@@ -59,6 +51,61 @@ export default function DayView({
       return false
     }
   })
+
+  // 겹치는 이벤트 처리 함수
+  const processOverlappingEvents = (events: any[]) => {
+    // 시간순으로 정렬
+    const sortedEvents = [...events].sort((a, b) => {
+      const timeA = Number.parseInt(a.startTime.split(":")[0]) * 60 + Number.parseInt(a.startTime.split(":")[1])
+      const timeB = Number.parseInt(b.startTime.split(":")[0]) * 60 + Number.parseInt(b.startTime.split(":")[1])
+      return timeA - timeB
+    })
+
+    // 겹치는 이벤트 그룹 찾기
+    const processedEvents = sortedEvents.map((event, index) => {
+      const overlappingEvents = sortedEvents.filter((otherEvent, otherIndex) => {
+        if (index === otherIndex) return false
+
+        const eventStart =
+          Number.parseInt(event.startTime.split(":")[0]) * 60 + Number.parseInt(event.startTime.split(":")[1])
+        const eventEnd =
+          Number.parseInt(event.endTime.split(":")[0]) * 60 + Number.parseInt(event.endTime.split(":")[1])
+        const otherStart =
+          Number.parseInt(otherEvent.startTime.split(":")[0]) * 60 + Number.parseInt(otherEvent.startTime.split(":")[1])
+        const otherEnd =
+          Number.parseInt(otherEvent.endTime.split(":")[0]) * 60 + Number.parseInt(otherEvent.endTime.split(":")[1])
+
+        // 시간이 겹치는지 확인
+        return eventStart < otherEnd && eventEnd > otherStart
+      })
+
+      // 겹치는 이벤트가 있으면 너비와 위치 조정
+      const overlapCount = overlappingEvents.length + 1
+      const eventIndex =
+        sortedEvents.slice(0, index + 1).filter((e, i) => {
+          const eStart = Number.parseInt(e.startTime.split(":")[0]) * 60 + Number.parseInt(e.startTime.split(":")[1])
+          const eEnd = Number.parseInt(e.endTime.split(":")[0]) * 60 + Number.parseInt(e.endTime.split(":")[1])
+          const eventStart =
+            Number.parseInt(event.startTime.split(":")[0]) * 60 + Number.parseInt(event.startTime.split(":")[1])
+          const eventEnd =
+            Number.parseInt(event.endTime.split(":")[0]) * 60 + Number.parseInt(event.endTime.split(":")[1])
+
+          return eStart < eventEnd && eEnd > eventStart
+        }).length - 1
+
+      return {
+        ...event,
+        overlapCount,
+        eventIndex,
+        width: overlapCount > 1 ? `${100 / overlapCount}%` : "100%",
+        left: overlapCount > 1 ? `${(eventIndex * 100) / overlapCount}%` : "0%",
+      }
+    })
+
+    return processedEvents
+  }
+
+  const processedEvents = processOverlappingEvents(dayEvents)
 
   return (
     <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl h-full overflow-y-auto">
@@ -87,20 +134,26 @@ export default function DayView({
           ))}
 
           {/* 이벤트 */}
-          {dayEvents.length > 0 ? (
-            dayEvents.map((event, i) => {
+          {processedEvents.length > 0 ? (
+            processedEvents.map((event, i) => {
               const eventStyle = calculateEventStyle(event.startTime, event.endTime)
               return (
                 <div
                   key={i}
-                  className={`absolute ${event.color} rounded-md p-2 text-white text-xs shadow-md cursor-pointer transition-all duration-200 ease-in-out hover:translate-y-[-2px] hover:shadow-lg left-4 right-4`}
-                  style={eventStyle}
+                  className={`absolute ${event.color} rounded-md p-2 text-white text-xs shadow-md cursor-pointer transition-all duration-200 ease-in-out hover:translate-y-[-2px] hover:shadow-lg hover:z-10`}
+                  style={{
+                    ...eventStyle,
+                    left: `calc(4px + ${event.left})`,
+                    right: event.overlapCount > 1 ? "auto" : "4px",
+                    width: event.overlapCount > 1 ? `calc(${event.width} - 8px)` : "calc(100% - 8px)",
+                    zIndex: event.overlapCount > 1 ? 1 : "auto",
+                  }}
                   onClick={() => handleEventClick(event)}
                 >
-                  <div className="font-medium">{event.title}</div>
+                  <div className="font-medium truncate">{event.title}</div>
                   <div className="flex items-center opacity-80 text-[10px] mt-1">
-                    <Clock className="h-3 w-3 mr-1" />
-                    {`${event.startTime} - ${event.endTime}`}
+                    <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
+                    <span className="truncate">{`${event.startTime} - ${event.endTime}`}</span>
                   </div>
                   {event.location && <div className="opacity-80 text-[10px] mt-1 truncate">{event.location}</div>}
                 </div>

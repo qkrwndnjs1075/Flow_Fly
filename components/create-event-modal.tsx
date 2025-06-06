@@ -104,10 +104,13 @@ export default function CreateEventModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white/20 dark:bg-gray-800/30 backdrop-blur-lg rounded-xl border border-white/20 dark:border-gray-700/30 shadow-xl p-6 w-full max-w-md text-white modal-animation">
+      <div className="bg-white dark:bg-gray-800 backdrop-blur-lg rounded-xl border border-gray-200 dark:border-white/20 shadow-xl p-6 w-full max-w-md text-gray-900 dark:text-white modal-animation">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">새 일정 만들기</h2>
-          <button onClick={onClose} className="text-white/70 hover:text-white">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">새 일정 만들기</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 dark:text-white/70 hover:text-gray-700 dark:hover:text-white"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -115,28 +118,32 @@ export default function CreateEventModal({
         <form onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label className="block mb-1 text-sm">일정 제목</label>
+              <label className="block mb-1 text-sm text-gray-700 dark:text-white">일정 제목</label>
               <input
                 type="text"
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
-                className="w-full bg-white/10 dark:bg-gray-700/30 border border-white/20 dark:border-gray-600/30 rounded-md px-3 py-2 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-gray-50 dark:bg-white/10 border border-gray-300 dark:border-white/20 rounded-md px-3 py-2 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="제목 추가"
                 required
               />
             </div>
 
             <div>
-              <label className="block mb-1 text-sm">캘린더</label>
+              <label className="block mb-1 text-sm text-gray-700 dark:text-white">캘린더</label>
               <select
                 name="calendarId"
                 value={formData.calendarId}
                 onChange={handleChange}
-                className="w-full bg-white/10 dark:bg-gray-700/30 border border-white/20 dark:border-gray-600/30 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-gray-50 dark:bg-white/10 border border-gray-300 dark:border-white/20 rounded-md px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {calendars.map((calendar) => (
-                  <option key={calendar.id} value={calendar.id}>
+                  <option
+                    key={calendar.id}
+                    value={calendar.id}
+                    className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  >
                     {calendar.name}
                   </option>
                 ))}
@@ -145,47 +152,65 @@ export default function CreateEventModal({
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block mb-1 text-sm">시작 시간</label>
+                <label className="block mb-1 text-sm text-gray-700 dark:text-white">시작 시간</label>
                 <TimePickerKeyboard
                   value={formData.startTime}
                   onChange={(time) => handleTimeChange("startTime", time)}
                 />
-                <p className="text-xs text-white/50 mt-1">직접 입력하거나 화살표로 조정</p>
+                <p className="text-xs text-gray-500 dark:text-white/50 mt-1">직접 입력하거나 화살표로 조정</p>
               </div>
               <div>
-                <label className="block mb-1 text-sm">종료 시간</label>
+                <label className="block mb-1 text-sm text-gray-700 dark:text-white">종료 시간</label>
                 <TimePickerKeyboard value={formData.endTime} onChange={(time) => handleTimeChange("endTime", time)} />
               </div>
             </div>
 
             <div>
-              <label className="block mb-1 text-sm">설명</label>
+              <label className="block mb-1 text-sm text-gray-700 dark:text-white">설명</label>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                className="w-full bg-white/10 dark:bg-gray-700/30 border border-white/20 dark:border-gray-600/30 rounded-md px-3 py-2 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 h-24"
+                className="w-full bg-gray-50 dark:bg-white/10 border border-gray-300 dark:border-white/20 rounded-md px-3 py-2 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 h-24 resize-none"
                 placeholder="설명 추가"
               ></textarea>
             </div>
 
             <div>
-              <label className="block mb-1 text-sm">색상</label>
+              <label className="block mb-1 text-sm text-gray-700 dark:text-white">색상</label>
               <select
                 name="color"
                 value={formData.color}
                 onChange={handleChange}
-                className="w-full bg-white/10 dark:bg-gray-700/30 border border-white/20 dark:border-gray-600/30 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-gray-50 dark:bg-white/10 border border-gray-300 dark:border-white/20 rounded-md px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="bg-blue-500">파란색</option>
-                <option value="bg-green-500">초록색</option>
-                <option value="bg-purple-500">보라색</option>
-                <option value="bg-yellow-500">노란색</option>
-                <option value="bg-pink-500">분홍색</option>
-                <option value="bg-indigo-500">인디고</option>
-                <option value="bg-orange-500">주황색</option>
-                <option value="bg-teal-500">청록색</option>
-                <option value="bg-red-500">빨간색</option>
+                <option value="bg-blue-500" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                  파란색
+                </option>
+                <option value="bg-green-500" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                  초록색
+                </option>
+                <option value="bg-purple-500" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                  보라색
+                </option>
+                <option value="bg-yellow-500" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                  노란색
+                </option>
+                <option value="bg-pink-500" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                  분홍색
+                </option>
+                <option value="bg-indigo-500" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                  인디고
+                </option>
+                <option value="bg-orange-500" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                  주황색
+                </option>
+                <option value="bg-teal-500" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                  청록색
+                </option>
+                <option value="bg-red-500" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                  빨간색
+                </option>
               </select>
             </div>
           </div>
@@ -194,13 +219,13 @@ export default function CreateEventModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-white/10 dark:bg-gray-700/30 hover:bg-white/20 dark:hover:bg-gray-600/30 rounded-md transition-all hover:translate-y-[-2px]"
+              className="px-4 py-2 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-white rounded-md transition-all hover:translate-y-[-2px]"
             >
               취소
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-md transition-all hover:translate-y-[-2px] hover:shadow-md"
+              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-all hover:translate-y-[-2px] hover:shadow-md"
             >
               저장
             </button>
