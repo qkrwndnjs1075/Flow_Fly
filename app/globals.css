@@ -2,30 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 다크 모드만 사용하므로 라이트 모드 변수 제거 */
 :root {
-  --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
-  --card: 0 0% 100%;
-  --card-foreground: 222.2 84% 4.9%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 222.2 84% 4.9%;
-  --primary: 221.2 83.2% 53.3%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 210 40% 96.1%;
-  --secondary-foreground: 222.2 47.4% 11.2%;
-  --muted: 210 40% 96.1%;
-  --muted-foreground: 215.4 16.3% 46.9%;
-  --accent: 210 40% 96.1%;
-  --accent-foreground: 222.2 47.4% 11.2%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 221.2 83.2% 53.3%;
-  --radius: 0.5rem;
-}
-
-.dark {
   --background: 222.2 84% 4.9%;
   --foreground: 210 40% 98%;
   --card: 222.2 84% 4.9%;
@@ -45,6 +23,17 @@
   --border: 217.2 32.6% 17.5%;
   --input: 217.2 32.6% 17.5%;
   --ring: 224.3 76.3% 48%;
+  --radius: 0.5rem;
+}
+
+/* 기본 다크 모드 스타일 */
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  color: hsl(var(--foreground));
+  background: hsl(var(--background));
 }
 
 @layer utilities {
@@ -60,24 +49,24 @@
   -webkit-backdrop-filter: blur(16px);
 }
 
-/* 다크 모드 스타일 */
-.dark .bg-white\/10 {
+/* 다크 모드 전용 스타일 */
+.bg-white\/10 {
   background-color: rgba(30, 41, 59, 0.3);
 }
 
-.dark .bg-white\/20 {
+.bg-white\/20 {
   background-color: rgba(30, 41, 59, 0.5);
 }
 
-.dark .border-white\/20 {
+.border-white\/20 {
   border-color: rgba(75, 85, 99, 0.3);
 }
 
-.dark .border-white\/10 {
+.border-white\/10 {
   border-color: rgba(75, 85, 99, 0.2);
 }
 
-/* 알림 배지 애니메이션 */
+/* 애니메이션 */
 @keyframes pulse {
   0%,
   100% {
@@ -92,7 +81,6 @@
   animation: pulse 2s infinite;
 }
 
-/* 추가 애니메이션 */
 @keyframes slide-in-right {
   0% {
     transform: translateX(100%);

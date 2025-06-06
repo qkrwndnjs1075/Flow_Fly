@@ -24,9 +24,9 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="ko">
+    <html lang="ko" className="dark">
       <head>{/* 카카오맵 API 스크립트는 kakao-map-search.tsx 컴포넌트 내에서 동적으로 로드됩니다 */}</head>
-      <body className={inter.className}>
+      <body className={`${inter.className} dark bg-gray-900 text-white`}>
         <NextAuthProvider>
           <AuthProvider>{children}</AuthProvider>
         </NextAuthProvider>
