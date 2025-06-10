@@ -1,349 +1,350 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useCallback } from "react"
-import Image from "next/image"
-import { ChevronLeft, ChevronRight, Plus, Search, Settings, Menu, Clock, MapPin, Calendar, Trash2 } from "lucide-react"
-import { useRouter } from "next/navigation"
-import CreateEventModal from "@/components/create-event-modal"
-import AddCalendarModal from "@/components/add-calendar-modal"
-import DayView from "@/components/day-view"
-import MonthView from "@/components/month-view"
-import ThemeToggle from "@/components/theme-toggle"
-import { useAuth } from "@/components/auth-context"
-import { useSession } from "next-auth/react"
-import { useCalendars } from "@/hooks/use-calendars"
-import { useEvents } from "@/hooks/use-events"
+import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
+import { ChevronLeft, ChevronRight, Plus, Search, Settings, Menu, Clock, MapPin, Calendar, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import CreateEventModal from "@/components/create-event-modal";
+import AddCalendarModal from "@/components/add-calendar-modal";
+import DayView from "@/components/day-view";
+import MonthView from "@/components/month-view";
+import { useAuth } from "@/components/auth-context";
+import { useSession } from "next-auth/react";
+import { useCalendars } from "@/hooks/use-calendars";
+import { useEvents } from "@/hooks/use-events";
 
 // 기본 프로필 이미지 URL
-const DEFAULT_PROFILE_IMAGE = "/images/default-profile.png"
+const DEFAULT_PROFILE_IMAGE = "/images/default-profile.png";
 
 export default function Home() {
-  const [isLoaded, setIsLoaded] = useState(false)
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  const router = useRouter()
-  const { user, isLoading: authLoading } = useAuth()
-  const { data: session, status: sessionStatus } = useSession()
+  const router = useRouter();
+  const { user, isLoading: authLoading } = useAuth();
+  const { data: session, status: sessionStatus } = useSession();
 
-  console.log("홈 페이지 세션 상태:", sessionStatus, session)
-  console.log("홈 페이지 사용자 정보:", user)
+  console.log("홈 페이지 세션 상태:", sessionStatus, session);
+  console.log("홈 페이지 사용자 정보:", user);
 
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [showAddCalendarModal, setShowAddCalendarModal] = useState(false)
-  const [currentMonthIndex, setCurrentMonthIndex] = useState(new Date().getMonth())
-  const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
-  const [selectedDay, setSelectedDay] = useState(new Date().getDate())
-  const [searchQuery, setSearchQuery] = useState("")
-  const [searchResults, setSearchResults] = useState([])
-  const [showSearchResults, setShowSearchResults] = useState(false)
-  const [activeCalendars, setActiveCalendars] = useState<string[]>([])
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showAddCalendarModal, setShowAddCalendarModal] = useState(false);
+  const [currentMonthIndex, setCurrentMonthIndex] = useState(new Date().getMonth());
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [selectedDay, setSelectedDay] = useState(new Date().getDate());
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [activeCalendars, setActiveCalendars] = useState<string[]>([]);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // 캘린더와 이벤트 데이터 로드
-  const { calendars, isLoading: isLoadingCalendars, error: calendarsError, addCalendar } = useCalendars()
-  const { events, isLoading: isLoadingEvents, error: eventsError, addEvent, deleteEvent } = useEvents()
+  const { calendars, isLoading: isLoadingCalendars, error: calendarsError, addCalendar } = useCalendars();
+  const { events, isLoading: isLoadingEvents, error: eventsError, addEvent, deleteEvent } = useEvents();
 
   // 월 이름 배열
-  const monthNames = ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"]
+  const monthNames = ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"];
 
   // 로그인 체크
   useEffect(() => {
     // 세션 로딩 중이면 기다림
     if (sessionStatus === "loading" || authLoading) {
-      return
+      return;
     }
 
     // 인증되지 않은 경우 로그인 페이지로 리디렉션
     if (sessionStatus === "unauthenticated" && !user) {
-      console.log("인증되지 않음, 로그인 페이지로 리디렉션")
-      router.push("/login")
+      console.log("인증되지 않음, 로그인 페이지로 리디렉션");
+      router.push("/login");
     } else {
-      console.log("인증됨, 홈 페이지 표시")
+      console.log("인증됨, 홈 페이지 표시");
     }
-  }, [sessionStatus, authLoading, user, router])
+  }, [sessionStatus, authLoading, user, router]);
 
   // 초기 활성 캘린더 설정
   useEffect(() => {
     if (calendars.length > 0 && activeCalendars.length === 0) {
-      setActiveCalendars(calendars.map((cal) => cal._id))
+      setActiveCalendars(calendars.map((cal) => cal._id));
     }
-  }, [calendars, activeCalendars])
+  }, [calendars, activeCalendars]);
 
   // 캘린더 이동 함수
   const goToPreviousMonth = useCallback(() => {
     setCurrentMonthIndex((prev) => {
       if (prev === 0) {
-        setCurrentYear((prev) => prev - 1)
-        return 11
+        setCurrentYear((prev) => prev - 1);
+        return 11;
       }
-      return prev - 1
-    })
-  }, [])
+      return prev - 1;
+    });
+  }, []);
 
   const goToNextMonth = useCallback(() => {
     setCurrentMonthIndex((prev) => {
       if (prev === 11) {
-        setCurrentYear((prev) => prev + 1)
-        return 0
+        setCurrentYear((prev) => prev + 1);
+        return 0;
       }
-      return prev + 1
-    })
-  }, [])
+      return prev + 1;
+    });
+  }, []);
 
   // 현재 월과 날짜 업데이트
-  const [currentMonth, setCurrentMonth] = useState("")
-  const [currentDate, setCurrentDate] = useState("")
+  const [currentMonth, setCurrentMonth] = useState("");
+  const [currentDate, setCurrentDate] = useState("");
 
   useEffect(() => {
-    setCurrentMonth(`${currentYear}년 ${monthNames[currentMonthIndex]}`)
-    setCurrentDate(`${currentYear}년 ${monthNames[currentMonthIndex]} ${selectedDay}일`)
-  }, [currentMonthIndex, currentYear, selectedDay, monthNames])
+    setCurrentMonth(`${currentYear}년 ${monthNames[currentMonthIndex]}`);
+    setCurrentDate(`${currentYear}년 ${monthNames[currentMonthIndex]} ${selectedDay}일`);
+  }, [currentMonthIndex, currentYear, selectedDay, monthNames]);
 
   // 이벤트 추가 함수
   const handleAddEvent = async (newEvent) => {
-    console.log("새 일정 추가:", newEvent)
+    console.log("새 일정 추가:", newEvent);
 
     try {
       // 필수 필드 확인
       if (!newEvent.title || !newEvent.startTime || !newEvent.endTime || !newEvent.calendarId) {
-        console.error("필수 필드 누락:", newEvent)
-        alert("모든 필수 정보를 입력해주세요.")
-        return
+        console.error("필수 필드 누락:", newEvent);
+        alert("모든 필수 정보를 입력해주세요.");
+        return;
       }
 
       // 날짜 형식 확인 및 처리
       if (!newEvent.date) {
-        console.log("날짜 정보 누락, 현재 날짜 사용")
-        const today = new Date(currentYear, currentMonthIndex, selectedDay)
-        newEvent.date = today.toISOString()
+        console.log("날짜 정보 누락, 현재 날짜 사용");
+        const today = new Date(currentYear, currentMonthIndex, selectedDay);
+        newEvent.date = today.toISOString();
       }
 
       // 요일 정보 추가
-      const eventDate = new Date(newEvent.date)
-      newEvent.day = eventDate.getDay() // 0: 일요일, 1: 월요일, ...
+      const eventDate = new Date(newEvent.date);
+      newEvent.day = eventDate.getDay(); // 0: 일요일, 1: 월요일, ...
 
       // 선택된 캘린더의 색상 가져오기
-      const selectedCalendar = calendars.find((cal) => cal._id === newEvent.calendarId)
+      const selectedCalendar = calendars.find((cal) => cal._id === newEvent.calendarId);
       if (selectedCalendar) {
-        newEvent.color = selectedCalendar.color
+        newEvent.color = selectedCalendar.color;
       }
 
-      console.log("최종 이벤트 데이터:", newEvent)
+      console.log("최종 이벤트 데이터:", newEvent);
 
       // 이벤트 추가
-      const success = await addEvent(newEvent)
+      const success = await addEvent(newEvent);
       if (success) {
-        alert("일정이 성공적으로 저장되었습니다.")
+        alert("일정이 성공적으로 저장되었습니다.");
       } else {
-        alert("일정 저장에 실패했습니다.")
+        alert("일정 저장에 실패했습니다.");
       }
     } catch (error) {
-      console.error("이벤트 저장 오류:", error)
-      alert(`일정 저장 실패: ${error.message}`)
+      console.error("이벤트 저장 오류:", error);
+      alert(`일정 저장 실패: ${error.message}`);
     }
-  }
+  };
 
   // 이벤트 삭제 함수
   const handleDeleteEvent = async () => {
-    if (!selectedEvent) return
+    if (!selectedEvent) return;
 
     try {
-      const success = await deleteEvent(selectedEvent._id)
+      const success = await deleteEvent(selectedEvent._id);
       if (success) {
-        alert("일정이 성공적으로 삭제되었습니다.")
-        setSelectedEvent(null)
-        setShowDeleteConfirm(false)
+        alert("일정이 성공적으로 삭제되었습니다.");
+        setSelectedEvent(null);
+        setShowDeleteConfirm(false);
       } else {
-        alert("일정 삭제에 실패했습니다.")
+        alert("일정 삭제에 실패했습니다.");
       }
     } catch (error) {
-      console.error("이벤트 삭제 오류:", error)
-      alert(`일정 삭제 실패: ${error.message}`)
+      console.error("이벤트 삭제 오류:", error);
+      alert(`일정 삭제 실패: ${error.message}`);
     }
-  }
+  };
 
   // 캘린더 추가 함수
   const handleAddCalendar = async (newCalendar) => {
-    console.log("새 캘린더 추가:", newCalendar)
+    console.log("새 캘린더 추가:", newCalendar);
 
     try {
-      const success = await addCalendar(newCalendar.name, newCalendar.color)
+      const success = await addCalendar(newCalendar.name, newCalendar.color);
       if (success) {
-        alert("캘린더가 성공적으로 저장되었습니다.")
+        alert("캘린더가 성공적으로 저장되었습니다.");
       } else {
-        alert("캘린더 저장에 실패했습니다.")
+        alert("캘린더 저장에 실패했습니다.");
       }
     } catch (error) {
-      console.error("캘린더 저장 오류:", error)
-      alert(`캘린더 저장 실패: ${error.message}`)
+      console.error("캘린더 저장 오류:", error);
+      alert(`캘린더 저장 실패: ${error.message}`);
     }
-  }
+  };
 
   // 캘린더 토글 함수
   const toggleCalendar = (calendarId: string) => {
     setActiveCalendars((prev) => {
       if (prev.includes(calendarId)) {
-        return prev.filter((id) => id !== calendarId)
+        return prev.filter((id) => id !== calendarId);
       } else {
-        return [...prev, calendarId]
+        return [...prev, calendarId];
       }
-    })
-  }
+    });
+  };
 
   // 설정 페이지로 이동
   const goToSettings = () => {
-    router.push("/settings")
-  }
+    router.push("/settings");
+  };
 
   // 검색 기능
   const handleSearch = (e) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!searchQuery.trim()) {
-      setShowSearchResults(false)
-      return
+      setShowSearchResults(false);
+      return;
     }
 
     // 이벤트 검색 (제목, 설명에서 검색)
     const results = events.filter(
       (event) =>
         event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (event.description && event.description.toLowerCase().includes(searchQuery.toLowerCase())),
-    )
+        (event.description && event.description.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
 
-    setSearchResults(results)
-    setShowSearchResults(true)
-  }
+    setSearchResults(results);
+    setShowSearchResults(true);
+  };
 
   // 컴포넌트 로드 완료 설정
   useEffect(() => {
-    setIsLoaded(true)
-  }, [])
+    setIsLoaded(true);
+  }, []);
 
-  const [currentView, setCurrentView] = useState("week")
-  const [selectedEvent, setSelectedEvent] = useState(null)
-  const [selectedCalendarId, setSelectedCalendarId] = useState("")
+  const [currentView, setCurrentView] = useState("week");
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [selectedCalendarId, setSelectedCalendarId] = useState("");
 
   // 기본 선택 캘린더 설정
   useEffect(() => {
     if (calendars.length > 0 && !selectedCalendarId) {
-      const defaultCalendar = calendars.find((cal) => cal.isDefault) || calendars[0]
-      setSelectedCalendarId(defaultCalendar._id)
+      const defaultCalendar = calendars.find((cal) => cal.isDefault) || calendars[0];
+      setSelectedCalendarId(defaultCalendar._id);
     }
-  }, [calendars, selectedCalendarId])
+  }, [calendars, selectedCalendarId]);
 
   const handleEventClick = (event) => {
-    setSelectedEvent(event)
-  }
+    setSelectedEvent(event);
+  };
 
   // 사이드바 토글 함수
   const toggleSidebar = () => {
-    setSidebarCollapsed(!sidebarCollapsed)
-  }
+    setSidebarCollapsed(!sidebarCollapsed);
+  };
 
   // 활성화된 캘린더의 이벤트만 필터링
-  const filteredEvents = events.filter((event) => activeCalendars.includes(event.calendar || event.calendarId))
+  const filteredEvents = events.filter((event) => activeCalendars.includes(event.calendar || event.calendarId));
 
   // 미니 캘린더 날짜 클릭 핸들러
   const handleDateClick = (day) => {
     if (day) {
-      setSelectedDay(day)
+      setSelectedDay(day);
     }
-  }
+  };
 
   // 검색 결과 닫기 기능 추가
   useEffect(() => {
     const handleClickOutside = (event) => {
       // 검색 결과 외부 클릭 시 닫기
       if (showSearchResults && !event.target.closest(".search-container")) {
-        setShowSearchResults(false)
+        setShowSearchResults(false);
       }
-    }
+    };
 
-    document.addEventListener("mousedown", handleClickOutside)
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [showSearchResults])
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showSearchResults]);
 
   // 미니 캘린더 계산
   const getDaysInMonth = (year, month) => {
-    return new Date(year, month + 1, 0).getDate()
-  }
+    return new Date(year, month + 1, 0).getDate();
+  };
 
   const getFirstDayOfMonth = (year, month) => {
-    return new Date(year, month, 1).getDay()
-  }
+    return new Date(year, month, 1).getDay();
+  };
 
-  const daysInMonth = getDaysInMonth(currentYear, currentMonthIndex)
-  const firstDayOffset = getFirstDayOfMonth(currentYear, currentMonthIndex)
+  const daysInMonth = getDaysInMonth(currentYear, currentMonthIndex);
+  const firstDayOffset = getFirstDayOfMonth(currentYear, currentMonthIndex);
   const miniCalendarDays = Array.from({ length: daysInMonth + firstDayOffset }, (_, i) =>
-    i < firstDayOffset ? null : i - firstDayOffset + 1,
-  )
+    i < firstDayOffset ? null : i - firstDayOffset + 1
+  );
 
   // 시간 슬롯 (8 AM to 8 PM)
-  const timeSlots = Array.from({ length: 13 }, (_, i) => i + 8)
+  const timeSlots = Array.from({ length: 13 }, (_, i) => i + 8);
 
   // 주간 뷰 계산
   const getWeekDays = (date) => {
-    const year = date.getFullYear()
-    const month = date.getMonth()
-    const day = date.getDate()
-    const dayOfWeek = date.getDay() // 0: 일요일, 1: 월요일, ...
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const day = date.getDate();
+    const dayOfWeek = date.getDay(); // 0: 일요일, 1: 월요일, ...
 
     // 현재 날짜가 속한 주의 일요일 계산
-    const sunday = new Date(year, month, day - dayOfWeek)
+    const sunday = new Date(year, month, day - dayOfWeek);
 
     // 일주일 날짜 배열 생성
     return Array.from({ length: 7 }, (_, i) => {
-      const date = new Date(sunday)
-      date.setDate(sunday.getDate() + i)
-      return date
-    })
-  }
+      const date = new Date(sunday);
+      date.setDate(sunday.getDate() + i);
+      return date;
+    });
+  };
 
-  const today = new Date(currentYear, currentMonthIndex, selectedDay)
-  const weekDays = getWeekDays(today)
-  const weekDayLabels = ["일", "월", "화", "수", "목", "금", "토"]
+  const today = new Date(currentYear, currentMonthIndex, selectedDay);
+  const weekDays = getWeekDays(today);
+  const weekDayLabels = ["일", "월", "화", "수", "목", "금", "토"];
 
   // 이벤트 위치 및 높이 계산
   const calculateEventStyle = (startTime, endTime) => {
-    const start = Number.parseInt(startTime.split(":")[0]) + Number.parseInt(startTime.split(":")[1]) / 60
-    const end = Number.parseInt(endTime.split(":")[0]) + Number.parseInt(endTime.split(":")[1]) / 60
-    const top = (start - 8) * 80 // 80px per hour
-    const height = (end - start) * 80
-    return { top: `${top}px`, height: `${height}px` }
-  }
+    const start = Number.parseInt(startTime.split(":")[0]) + Number.parseInt(startTime.split(":")[1]) / 60;
+    const end = Number.parseInt(endTime.split(":")[0]) + Number.parseInt(endTime.split(":")[1]) / 60;
+    const top = (start - 8) * 80; // 80px per hour
+    const height = (end - start) * 80;
+    return { top: `${top}px`, height: `${height}px` };
+  };
 
   // 날짜별 이벤트 필터링
   const getEventsForDate = (date) => {
-    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+      date.getDate()
+    ).padStart(2, "0")}`;
     return filteredEvents.filter((event) => {
-      const eventDate = new Date(event.date)
+      const eventDate = new Date(event.date);
       return (
         eventDate.getFullYear() === date.getFullYear() &&
         eventDate.getMonth() === date.getMonth() &&
         eventDate.getDate() === date.getDate()
-      )
-    })
-  }
+      );
+    });
+  };
 
   // 오늘 날짜로 이동하는 함수
   const goToToday = useCallback(() => {
-    const now = new Date()
-    setCurrentYear(now.getFullYear())
-    setCurrentMonthIndex(now.getMonth())
-    setSelectedDay(now.getDate())
+    const now = new Date();
+    setCurrentYear(now.getFullYear());
+    setCurrentMonthIndex(now.getMonth());
+    setSelectedDay(now.getDate());
 
     // 주간 뷰 업데이트를 위해 today 상태 갱신
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     // 현재 날짜 문자열 업데이트
-    setCurrentMonth(`${now.getFullYear()}년 ${monthNames[now.getMonth()]}`)
-    setCurrentDate(`${now.getFullYear()}년 ${monthNames[now.getMonth()]} ${now.getDate()}일`)
+    setCurrentMonth(`${now.getFullYear()}년 ${monthNames[now.getMonth()]}`);
+    setCurrentDate(`${now.getFullYear()}년 ${monthNames[now.getMonth()]} ${now.getDate()}일`);
 
     // 필요한 경우 현재 뷰를 day로 변경
     // setCurrentView("day")
-  }, [monthNames])
+  }, [monthNames]);
 
   // 로딩 중이거나 인증되지 않은 경우 로딩 화면 표시
   if (sessionStatus === "loading" || authLoading) {
@@ -351,7 +352,7 @@ export default function Home() {
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-900 to-purple-900">
         <div className="text-white text-xl">로딩 중...</div>
       </div>
-    )
+    );
   }
 
   // 인증되지 않은 경우 빈 화면 표시 (리디렉션 처리 중)
@@ -360,7 +361,7 @@ export default function Home() {
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-900 to-purple-900">
         <div className="text-white text-xl">로그인이 필요합니다. 리디렉션 중...</div>
       </div>
-    )
+    );
   }
 
   return (
@@ -376,7 +377,9 @@ export default function Home() {
 
       {/* Navigation */}
       <header
-        className={`absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-8 py-6 opacity-0 ${isLoaded ? "animate-fade-in" : ""}`}
+        className={`absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-8 py-6 opacity-0 ${
+          isLoaded ? "animate-fade-in" : ""
+        }`}
         style={{ animationDelay: "0.2s" }}
       >
         <div className="flex items-center gap-4">
@@ -405,8 +408,8 @@ export default function Home() {
                     key={i}
                     className="p-2 hover:bg-white/10 cursor-pointer border-b border-white/10 last:border-b-0"
                     onClick={() => {
-                      handleEventClick(result)
-                      setShowSearchResults(false)
+                      handleEventClick(result);
+                      setShowSearchResults(false);
                     }}
                   >
                     <div className="text-white font-medium">{result.title}</div>
@@ -416,9 +419,6 @@ export default function Home() {
               </div>
             )}
           </div>
-
-          {/* 테마 토글 */}
-          <ThemeToggle />
 
           <Settings
             className="h-6 w-6 text-white drop-shadow-md cursor-pointer transition-transform hover:scale-110"
@@ -546,8 +546,8 @@ export default function Home() {
                                 !activeCalendars.includes(cal._id) ? "opacity-40" : ""
                               }`}
                               onClick={(e) => {
-                                e.stopPropagation()
-                                setSelectedCalendarId(cal._id)
+                                e.stopPropagation();
+                                setSelectedCalendarId(cal._id);
                               }}
                             ></div>
                             <label
@@ -602,19 +602,25 @@ export default function Home() {
             <div className="flex items-center gap-2 rounded-md p-1">
               <button
                 onClick={() => setCurrentView("day")}
-                className={`px-3 py-1 rounded ${currentView === "day" ? "bg-white/20 dark:bg-gray-700/50" : ""} text-white text-sm`}
+                className={`px-3 py-1 rounded ${
+                  currentView === "day" ? "bg-white/20 dark:bg-gray-700/50" : ""
+                } text-white text-sm`}
               >
                 일
               </button>
               <button
                 onClick={() => setCurrentView("week")}
-                className={`px-3 py-1 rounded ${currentView === "week" ? "bg-white/20 dark:bg-gray-700/50" : ""} text-white text-sm`}
+                className={`px-3 py-1 rounded ${
+                  currentView === "week" ? "bg-white/20 dark:bg-gray-700/50" : ""
+                } text-white text-sm`}
               >
                 주
               </button>
               <button
                 onClick={() => setCurrentView("month")}
-                className={`px-3 py-1 rounded ${currentView === "month" ? "bg-white/20 dark:bg-gray-700/50" : ""} text-white text-sm`}
+                className={`px-3 py-1 rounded ${
+                  currentView === "month" ? "bg-white/20 dark:bg-gray-700/50" : ""
+                } text-white text-sm`}
               >
                 월
               </button>
@@ -684,7 +690,7 @@ export default function Home() {
 
                       {/* Events */}
                       {getEventsForDate(day).map((event, i) => {
-                        const eventStyle = calculateEventStyle(event.startTime, event.endTime)
+                        const eventStyle = calculateEventStyle(event.startTime, event.endTime);
                         return (
                           <div
                             key={i}
@@ -700,7 +706,7 @@ export default function Home() {
                             <div className="font-medium">{event.title}</div>
                             <div className="opacity-80 text-[10px] mt-1">{`${event.startTime} - ${event.endTime}`}</div>
                           </div>
-                        )
+                        );
                       })}
                     </div>
                   ))}
@@ -715,7 +721,7 @@ export default function Home() {
                 currentYear={currentYear}
                 currentMonthIndex={currentMonthIndex}
                 onDateClick={(day) => {
-                  setSelectedDay(day)
+                  setSelectedDay(day);
                   // 선택적으로 Day 뷰로 전환할 수도 있음
                   // setCurrentView("day");
                 }}
@@ -823,5 +829,5 @@ export default function Home() {
         onSave={handleAddCalendar}
       />
     </div>
-  )
+  );
 }
